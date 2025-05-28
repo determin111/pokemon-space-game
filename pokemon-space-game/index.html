@@ -105,34 +105,34 @@
             loadImages() {
                 // 背景图像
                 this.bgImage = new Image();
-                this.bgImage.src = 'images/earth_view.jpg';
+                this.bgImage.src = '/images/earth_view.jpg';
                 this.bgImage.onload = () => this.bgLoaded = true;
                 
                 // 玩家图像
                 this.playerImage = new Image();
-                this.playerImage.src = 'images/rayquaza.png';
+                this.playerImage.src = '/images/rayquaza.png';
                 this.playerImage.onload = () => this.playerLoaded = true;
                 
                 // 敌人图像
                 this.enemyImage = new Image();
-                this.enemyImage.src = 'images/deoxys.png';
+                this.enemyImage.src = '/images/deoxys.png';
                 this.enemyImage.onload = () => this.enemyLoaded = true;
             }
             
             loadSounds() {
                 // 背景音乐
-                this.bgMusic = new Audio('sounds/background_music.mp3');
+                this.bgMusic = new Audio('/sounds/background_music.mp3');
                 this.bgMusic.loop = true;
                 
                 // 射击音效
-                this.playerShootSound = new Audio('sounds/player_shoot.mp3');
-                this.enemyShootSound = new Audio('sounds/enemy_shoot.mp3');
+                this.playerShootSound = new Audio('/sounds/player_shoot.mp3');
+                this.enemyShootSound = new Audio('/sounds/enemy_shoot.mp3');
                 
                 // 爆炸音效
-                this.explosionSound = new Audio('sounds/explosion.mp3');
+                this.explosionSound = new Audio('/sounds/explosion.mp3');
                 
                 // 升级音效
-                this.levelUpSound = new Audio('sounds/level_up.mp3');
+                this.levelUpSound = new Audio('/sounds/level_up.mp3');
             }
             
             setupKeyboardControls() {
