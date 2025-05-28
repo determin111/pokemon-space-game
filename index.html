@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>宝可梦太空对战</title>
     <style>
-        /* 之前定义的css样式 */
+        /*  之前定义的css样式  */
         html, body {
             margin: 0;
             padding: 0;
@@ -80,79 +80,20 @@
         }
 
         #pause-button {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            width: 60px;
-            height: 40px;
-            background-color: rgba(0, 0, 255, 0.7);
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 18px;
-            user-select: none; /* 禁止文本选择 */
-        }
-       #leaderboard {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-size: 14px;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 5px;
-            border-radius: 5px;
-            text-align: left;
-            z-index: 10; /* 确保排行榜在最上层 */
-        }
-
-        #leaderboard-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        #leaderboard-list {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #leaderboard-list li {
-            margin-bottom: 3px;
-        }
-
-        #name-input-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            color: white;
-            z-index: 11;
-            display: none;
-        }
-
-        #name-input {
-             margin-bottom: 10px;
-            text-align: center;
-            padding: 5px;
-            width: 200px;
-           border-radius: 5px;
-        }
-
-        #submit-name-button {
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        width: 60px;
+        height: 40px;
+        background-color: rgba(0, 0, 255, 0.7);
+        border-radius: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 18px;
+        user-select: none; /* 禁止文本选择 */
+    }
     </style>
 </head>
 <body>
@@ -172,19 +113,6 @@
      <!-- 暂停按钮 -->
     <div id="pause-button">⏸️</div>
 
-    <!-- 排行榜 -->
-    <div id="leaderboard">
-       <div id="leaderboard-title">排行榜</div>
-        <ul id="leaderboard-list"></ul>
-    </div>
-
-    <!-- 输入用户名的窗口 -->
-    <div id="name-input-container">
-        <label for="name-input">请输入你的名字:</label><br>
-        <input type="text" id="name-input" maxlength="10"><br>
-        <button id="submit-name-button">提交</button>
-    </div>
-
     <script>
         // 游戏主类
         class PokemonSpaceGame {
@@ -194,10 +122,6 @@
                 this.ctx = this.canvas.getContext('2d');
                 this.gameOverScreen = document.getElementById('gameOverScreen');
                 this.finalScoreText = document.getElementById('finalScore');
-                this.nameInputContainer = document.getElementById('name-input-container');
-                this.nameInput = document.getElementById('name-input');
-                this.submitNameButton = document.getElementById('submit-name-button');
-                this.leaderboardList = document.getElementById('leaderboard-list');
 
                 // 游戏状态
                 this.gameActive = true;
@@ -218,16 +142,13 @@
                 this.playerPos = {x: 160, y: 450};
                 this.bullets = [];
                 this.bulletSpeed = 9;  // Adjusted player bullet
-
                 //【新增】激光相关参数
                 this.laserActive = false;
                 this.laserTimer = 0;
-                this.laserCooldown = 0;  // 激光冷却时间
 
                 // 敌人相关参数 - Even further reduced difficulty
                 this.enemies = [];
                 this.enemySize = 50;
-
                 this.enemySpeed = 1.2; // Adjusted enemy speed
                 this.spawnRate = 0.012; // Adjusted spawn rate
                 this.maxEnemies = 4;   // Adjusted max enemies
@@ -252,66 +173,14 @@
                 document.addEventListener('mousedown', this.handleRestart.bind(this));  //鼠标点击
                 document.addEventListener('touchstart', this.handleRestart.bind(this)); //触摸
 
-                // 初始化本地存储，如果没有就添加
-                this.initializeLocalStorage();
-                // 加载排行榜
-                this.loadLeaderboard();
-                      // Setup username submission
-                this.submitNameButton.addEventListener('click', () => {
-                    const playerName = this.nameInput.value.trim();
-                    if (playerName !== '') {
-                        this.saveScore(playerName, this.score);
-                        this.nameInputContainer.style.display = 'none';
-                        this.loadLeaderboard(); // Refresh the leaderboard after saving the score
-                   } else {
-                         alert("请输入玩家姓名");
-                    }
-                });
-
                 // 开始游戏循环
                 this.lastTime = 0;
                 this.init();
-            }
-            // 初始化本地存储
-            initializeLocalStorage() {
-                if (!localStorage.getItem('leaderboard')) {
-                    localStorage.setItem('leaderboard', JSON.stringify([]));
-                }
-            }
-
-            // 加载排行榜
-            loadLeaderboard() {
-              try {
-                const leaderboardData = JSON.parse(localStorage.getItem('leaderboard')) || [];
-                    // Sort by score in descending order
-                    leaderboardData.sort((a, b) => b.score - a.score);
-                this.displayLeaderboard(leaderboardData);
-            } catch (e) {
-                console.error("解析本地存储失败:", e);
-                localStorage.setItem('leaderboard', JSON.stringify([]));
-           }
-        }
-        // 保存分数
-          saveScore(playerName, score) {
-            try {
-                const leaderboardData = JSON.parse(localStorage.getItem('leaderboard')) || [];
-                leaderboardData.push({ name: playerName, score: score });
-                leaderboardData.sort((a, b) => b.score - a.score);
-                localStorage.setItem('leaderboard', JSON.stringify(leaderboardData));
-            } catch (e) {
-                console.error("JSON.parseError:", e); console.error("写入本地储存失败:", e);
-                  localStorage.setItem('leaderboard', JSON.stringify([]));
-          }
-        }
-        //    显示排行榜
-            displayLeaderboard(leaderboardData) {
-                this.leaderboardList.innerHTML = '';
-                for (let i = 0; i < Math.min(5, leaderboardData.length); i++) {
-                    const entry = leaderboardData[i];
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${i + 1}. ${entry.name}: ${entry.score}`;
-                    this.leaderboardList.appendChild(listItem);
-                }
+                setInterval(() => {
+                    if (this.gameActive && !this.gamePaused) {
+                        this.updatePlayerPosition();
+                    }
+                }, 20); // 每 20 毫秒
             }
 
             loadImages() {
@@ -523,18 +392,15 @@
                     this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
                 } else {
                     // 激活激光
-                    if (this.laserCooldown <= 0) { // 检查冷却时间
-                        this.laserActive = true;
-                        this.laserTimer = 1; // 激光持续1秒
-                        this.laserCooldown = 4; // 设置冷却时间 (秒)
-                        this.playerShootSound.currentTime = 0;
-                        this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
-                    }
+                    this.laserActive = true;
+                    this.laserTimer = 2; // 激光持续2秒
+                    this.playerShootSound.currentTime = 0;
+                    this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
                 }
             }
 
             init() {
-                this.spawnRate = 0.012;
+                 this.spawnRate = 0.012;
                 // 重置游戏状态
                 this.gameActive = true;
                 this.gamePaused = false;
@@ -556,7 +422,6 @@
                 this.characterLevel = 1;
                 this.laserActive = false;
                 this.laserTimer = 0;
-                this.laserCooldown = 0;
 
                 // 隐藏游戏结束屏幕
                 this.gameOverScreen.style.display = 'none';
@@ -612,9 +477,6 @@
                     this.nextLevelScore = this.nextLevelScore * 2;
                   }
 
-                 // 减少激光冷却时间
-                 this.reduceLaserCooldown(deltaTime);
-
                     if (this.gameActive) {
                     requestAnimationFrame(this.gameLoop.bind(this));
                 }
@@ -623,14 +485,14 @@
              drawPlayer() {
                 if (this.playerLoaded) {
                     //  Flicker the player image if invulnerable
-                    if (this.invulnerable && Math.floor(Date.now() / 100) % 2) { // Blink effect
-                        return; // Skip drawing for flicker effect
-                    }
+                        if (this.invulnerable && Math.floor(Date.now() / 100) % 2) { // Blink effect
+                            return; // Skip drawing for flicker effect
+                        }
                    this.ctx.drawImage(this.playerImage, this.playerPos.x, this.playerPos.y, this.playerSize, this.playerSize);
                 } else {
                     this.ctx.fillStyle = 'green';
 
-                    if (this.invulnerable && Math.floor(Date.now() / 100) % 2) { // Blink effect
+                      if (this.invulnerable && Math.floor(Date.now() / 100) % 2) { // Blink effect
                          return; // Skip drawing for flicker effect
                     }
                     this.ctx.fillRect(this.playerPos.x, this.playerPos.y, this.playerSize, this.playerSize);
@@ -689,16 +551,6 @@
                 }
             }
 
-             // 减少激光冷却时间函数
-            reduceLaserCooldown(deltaTime) {
-              if (this.laserCooldown > 0) {
-                this.laserCooldown -= deltaTime / 1000;  //deltaTime通常以毫秒为单位，转换为秒
-                 if (this.laserCooldown < 0) {
-                   this.laserCooldown = 0;   // 确保冷却时间永远不会变为负数
-                }
-            }
-        }
-
             //【新增】更新激光状态
             updateLaser(deltaTime) {
                 if (this.laserActive) {
@@ -744,10 +596,10 @@
                     const enemy = this.enemies[i];
 
                    // Collision check only if player is NOT invulnerable for now
-                    if (!this.invulnerable && this.checkCollision(
-                        { x: this.playerPos.x, y: this.playerPos.y }, this.playerSize,
-                        { x: enemy.x, y: enemy.y }, this.enemySize
-                    )) {
+                 if (!this.invulnerable && this.checkCollision(
+                    { x: this.playerPos.x, y: this.playerPos.y }, this.playerSize,
+                    { x: enemy.x, y: enemy.y }, this.enemySize
+                )) {
                        // Explosion on collision and player LOSES life:
                         this.drawExplosion(
                             this.playerPos.x + this.playerSize / 2,
@@ -757,13 +609,13 @@
                         this.explosionSound.currentTime = 0;
                         this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
 
-                        this.lives--; // Player loses a life on collision
+                       this.lives--; // Player loses a life on collision
                         this.enemies.splice(i, 1);   // Remove collided enemy
 
                         if (this.lives <= 0) {
                             this.gameOver();
                             return;
-                        }
+                       }
 
                         //Initiate invulnerability
                         this.invulnerable = true;
@@ -775,11 +627,11 @@
                           }
                     }
                        //Check for enemy image validity:
-                    if (this.enemyLoaded) {
+                     if (this.enemyLoaded) {
                         this.ctx.drawImage(this.enemyImage, enemy.x, enemy.y, this.enemySize, this.enemySize);
-                    } else {
-                    this.ctx.fillStyle = 'red';
-                    this.ctx.fillRect(enemy.x, enemy.y, this.enemySize, this.enemySize);
+                     } else {
+                        this.ctx.fillStyle = 'red';
+                        this.ctx.fillRect(enemy.x, enemy.y, this.enemySize, this.enemySize);
                      }
 
                 // Fire randomly from enemies when no explosion detected
@@ -825,7 +677,7 @@
                     this.ctx.fill();
 
                     // 主球体
-                    this.ctx.fillStyle = 'rgba(255,77, 255, 1)';
+                    this.ctx.fillStyle = 'rgba(255, 77, 255, 1)';
                     this.ctx.beginPath();
                     this.ctx.arc(bullet.x, bullet.y, ballSize, 0, Math.PI * 2);
                     this.ctx.fill();
@@ -852,7 +704,7 @@
                             this.gameOver();
                             return;
                         }
-                         //Initiate invulnerability
+                        //Initiate invulnerability
                          this.invulnerable = true;
                        this.invulnerableTimer = 2;  // 2 seconds of invulnerability
 
@@ -897,24 +749,24 @@
                 this.ctx.fillText(`等级: ${this.level}`, 10, 60);
                 //【新增】显示角色等级
                 this.ctx.fillText(`角色等级: ${this.characterLevel}`, 10, 72);
-                  // 冷却时间：
-                this.ctx.fillText(`激光冷却: ${this.laserCooldown > 0 ? this.laserCooldown.toFixed(1) : '就绪'}`, 10, 84);
 
-                this.ctx.fillStyle = this.invulnerable ? 'yellow' : 'white'; // Highlight when invulnerable
-               this.ctx.fillText(`无敌: ${this.invulnerable ? this.invulnerableTimer.toFixed(1) : '否'}`, 10, 96);
+                 this.ctx.fillStyle = this.invulnerable ? 'yellow' : 'white'; // Highlight when invulnerable
+                this.ctx.fillText(`无敌: ${this.invulnerable ? this.invulnerableTimer.toFixed(1) : '否'}`, 10, 75);
 
                 this.ctx.font = '8px Arial';
-                this.ctx.fillText('移动: 摇杆', 10, 108);
-                this.ctx.fillText('射击: 火键', 10, 118);
-               //this.ctx.fillText('暂停: 暂停键', 10, 110);
+                this.ctx.fillText('移动: 摇杆', 10, 85);
+                this.ctx.fillText('射击: 火键', 10, 95);
+                this.ctx.fillText('暂停: 暂停键', 10, 110);
             }
 
             levelUp() {
-                // 提高难度
+                // 提高难度和怪物能力同步降低
                 this.level++;
                 this.enemySpeed *= 1.04;
                 this.spawnRate = Math.min(this.spawnRate * 1.08, 0.07);
                 this.enemyFireRate = Math.min(this.enemyFireRate * 1.08, 0.035);
+                  //【新增】角色升级
+                this.characterLevelUp();
 
                 this.ctx.font = '24px Arial';
                 this.ctx.fillStyle = 'yellow';
@@ -928,28 +780,25 @@
                 //【新增】角色升级
                 this.characterLevelUp();
             }
-
-        //【新增】角色升级函数
+            //【新增】角色升级函数
         characterLevelUp() {
             if (this.characterLevel < 3) {
                 this.characterLevel++;
-                   this.invulnerable = true;
-                    this.invulnerableTimer = 2;
-
+                this.invulnerable = true;
+                this.invulnerableTimer = 2;
+                // 可以添加一些视觉效果或音效来指示角色升级
                 console.log(`角色升级到等级${this.characterLevel}!`);
             } else {
                 console.log("角色已达到最高等级!");
             }
         }
 
-            gameOver() {
+         gameOver() {
                 this.bgMusic.pause();
                 this.gameOverScreen.style.display = 'block';
                 this.finalScoreText.textContent = `最终分数: ${this.score}`;
                 this.waitForRestart = true;
                 this.gameActive = false;
-                 // Display name input container
-                this.nameInputContainer.style.display = 'block';
             }
 
             checkCollision(pos1, sz1, pos2, sz2) {
@@ -968,4 +817,4 @@
         };
     </script>
 </body>
-</html>
+</html>在这基础上改
