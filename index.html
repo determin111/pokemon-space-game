@@ -127,7 +127,7 @@
                 this.gamePaused = false;
                 this.waitForRestart = false;
                 this.score = 0;
-                this.lives = 5; // 增加生命值
+                this.lives = 5;
                 this.level = 1;
                 this.nextLevelScore = 20;
 
@@ -135,18 +135,18 @@
                 this.playerSize = 80;
                 this.playerPos = {x: 160, y: 450};
                 this.bullets = [];
-                this.bulletSpeed = 8; // 降低子弹速度
+                this.bulletSpeed = 8;
 
-                // 敌人相关参数
+                // 敌人相关参数 - Reduced Difficulty
                 this.enemies = [];
                 this.enemySize = 50;
-                this.enemySpeed = 1.5; // 降低敌人速度
-                this.spawnRate = 0.02; // 降低生成频率
-                this.enemyFireRate = 0.0075; // 降低射击频率
+                this.enemySpeed = 1.5;
+                this.spawnRate = 0.015; // further reduced spawnRate
+                this.maxEnemies = 5; // Limit the maximum number of enemies
+                this.enemyFireRate = 0.0075;
                 this.enemyBullets = [];
                 this.enemyBulletSpeed = 3;
                 this.enemyBulletSize = 8;
-
                 // 加载图像
                 this.loadImages();
 
@@ -250,11 +250,11 @@
             }
 
             handleRestart(e) {
-                    if (this.waitForRestart) {
-                        e.preventDefault(); // 阻止默认行为
-                        this.init(); // 重新初始化游戏
-                    }
+                if (this.waitForRestart) {
+                    e.preventDefault(); // 阻止默认行为
+                    this.init(); // 重新初始化游戏
                 }
+            }
 
             setupTouchControls() {
                 const joystick = document.getElementById('joystick');
@@ -382,10 +382,7 @@
             }
 
             init() {
-                       // 降低怪物能力与玩家等级同步降低
-                this.enemySpeed = 1.5;
-                this.spawnRate = 0.02;
-                this.enemyFireRate = 0.0075;
+                this.spawnRate = 0.015;
                 // 重置游戏状态
                 this.gameActive = true;
                 this.gamePaused = false;
@@ -395,12 +392,12 @@
                 this.enemies = [];
                 this.enemyBullets = [];
                 this.score = 0;
-                this.lives = 5 // 增加生命值;
+                this.lives = 5;
                 this.level = 1;
                 this.nextLevelScore = 20;
-                this.enemySpeed = 1.5; // 降低敌人速度
-                this.spawnRate = 0.02;   // 降低生成频率
-                this.enemyFireRate = 0.0075; // 降低射击频率
+                this.enemySpeed = 1.5;
+                this.enemyFireRate = 0.0075;
+                 this.maxEnemies = 5; // Set the maximum number of enemies here
 
                 // 隐藏游戏结束屏幕
                 this.gameOverScreen.style.display = 'none';
@@ -413,16 +410,12 @@
             }
 
             gameLoop(timestamp) {
-                // 计算帧间隔
                 const deltaTime = timestamp - this.lastTime;
                 this.lastTime = timestamp;
 
-                // 检查游戏暂停状态
                 if (this.gamePaused) {
-                         // 在暂停状态下显示暂停文本
                     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
                     this.ctx.font = '30px Arial';
                     this.ctx.fillStyle = 'white';
                     this.ctx.textAlign = 'center';
@@ -431,10 +424,8 @@
                     requestAnimationFrame(this.gameLoop.bind(this));
                     return;
                 }
-                // 清除屏幕
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-                // 绘制背景
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 if (this.bgLoaded) {
                     this.ctx.drawImage(this.bgImage, 0, 0, 400, 600);
                 } else {
@@ -442,34 +433,23 @@
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 }
 
-                // 生成新的敌人
-                if (Math.random() < this.spawnRate) {
+                 // Generate new enemies (with the maximum limit check)
+                if (Math.random() < this.spawnRate && this.enemies.length < this.maxEnemies) {
                     const x = Math.random() * (400 - this.enemySize);
-                    this.enemies.push({x: x, y: 0});
+                    this.enemies.push({ x: x, y: 0 });
                 }
 
-                // 绘制玩家
                 this.drawPlayer();
-
-                // 处理玩家子弹
                 this.updateBullets();
-
-                // 处理敌人
                 this.updateEnemies();
-
-                // 处理敌人子弹
                 this.updateEnemyBullets();
-
-                // 绘制游戏信息面板
                 this.drawInfoPanel();
 
-                // 等级提升检查
                 if (this.score >= this.nextLevelScore) {
                     this.levelUp();
                     this.nextLevelScore = this.nextLevelScore * 2;
                 }
 
-                // 继续游戏循环
                 if (this.gameActive) {
                     requestAnimationFrame(this.gameLoop.bind(this));
                 }
@@ -477,34 +457,25 @@
 
             drawPlayer() {
                 if (this.playerLoaded) {
-                    this.ctx.drawImage(this.playerImage,
-                        this.playerPos.x, this.playerPos.y,
-                        this.playerSize, this.playerSize);
+                    this.ctx.drawImage(this.playerImage, this.playerPos.x, this.playerPos.y, this.playerSize, this.playerSize);
                 } else {
-                    // 备用绘图方案
                     this.ctx.fillStyle = 'green';
-                    this.ctx.fillRect(this.playerPos.x, this.playerPos.y,
-                        this.playerSize, this.playerSize);
+                    this.ctx.fillRect(this.playerPos.x, this.playerPos.y, this.playerSize, this.playerSize);
                 }
             }
 
             updateBullets() {
                 for (let i = this.bullets.length - 1; i >= 0; i--) {
-                    // 移动子弹
                     this.bullets[i].y -= this.bulletSpeed;
-
-                    // 检查出界的子弹
                     if (this.bullets[i].y < 0) {
                         this.bullets.splice(i, 1);
                         continue;
                     }
 
-                    // 绘制子弹（龙息光线形式）
                     const x = this.bullets[i].x;
                     const y = this.bullets[i].y;
                     const rayLen = 40;
 
-                    // 核心光线
                     this.ctx.lineWidth = 5;
                     this.ctx.strokeStyle = 'rgba(0, 180, 255, 1)';
                     this.ctx.beginPath();
@@ -512,7 +483,6 @@
                     this.ctx.lineTo(x + 1, y - rayLen);
                     this.ctx.stroke();
 
-                    // 外围光芒
                     this.ctx.lineWidth = 8;
                     this.ctx.strokeStyle = 'rgba(0, 128, 255, 0.5)';
                     this.ctx.beginPath();
@@ -520,35 +490,22 @@
                     this.ctx.lineTo(x + 3, y - rayLen * 0.8);
                     this.ctx.stroke();
 
-                    // 光线头部特效
                     this.ctx.fillStyle = 'rgba(0, 180, 255, 0.7)';
                     this.ctx.beginPath();
                     this.ctx.arc(x, y, 5, 0, Math.PI * 2);
                     this.ctx.fill();
 
-                    // 检查子弹是否击中敌人
                     for (let j = this.enemies.length - 1; j >= 0; j--) {
                         const enemy = this.enemies[j];
-
-                        // 检查碰撞
                         if (this.checkCollision(
-                            {x: x - 5, y: y - rayLen}, 12,
-                            {x: enemy.x, y: enemy.y}, this.enemySize
+                            { x: x - 5, y: y - rayLen }, 12,
+                            { x: enemy.x, y: enemy.y }, this.enemySize
                         )) {
-                            // 删除敌人
                             this.enemies.splice(j, 1);
-
-                            // 增加分数
                             this.score += 5;
-
-                            // 爆炸效果
-                            this.drawExplosion(enemy.x + this.enemySize/2, enemy.y + this.enemySize/2, this.enemySize);
-
-                            // 播放爆炸音效
+                            this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
                             this.explosionSound.currentTime = 0;
                             this.explosionSound.play().catch(e => console.log("音效播放失败:", e));
-
-                            // 删除子弹
                             this.bullets.splice(i, 1);
                             break;
                         }
@@ -558,15 +515,9 @@
 
             updateEnemies() {
                 for (let i = this.enemies.length - 1; i >= 0; i--) {
-                    // 移动敌人
                     this.enemies[i].y += this.enemySpeed;
-
-                    // 检查是否有敌人到达底部
                     if (this.enemies[i].y > 600 - this.enemySize) {
-                        // 删除到达底部的敌人
                         this.enemies.splice(i, 1);
-
-                        // 减少生命值
                         this.lives--;
                         if (this.lives <= 0) {
                             this.gameOver();
@@ -577,25 +528,18 @@
 
                     const enemy = this.enemies[i];
 
-                    // 绘制敌人
                     if (this.enemyLoaded) {
-                        this.ctx.drawImage(this.enemyImage,
-                            enemy.x, enemy.y, this.enemySize, this.enemySize);
+                        this.ctx.drawImage(this.enemyImage, enemy.x, enemy.y, this.enemySize, this.enemySize);
                     } else {
-                        // 备用绘图方案
                         this.ctx.fillStyle = 'red';
                         this.ctx.fillRect(enemy.x, enemy.y, this.enemySize, this.enemySize);
                     }
 
-                    // 敌人发射攻击
                     if (Math.random() < this.enemyFireRate) {
-                        // 从敌人位置发射超能力球
                         this.enemyBullets.push({
                             x: enemy.x + this.enemySize / 2,
                             y: enemy.y + this.enemySize / 2
                         });
-
-                        // 播放敌人射击音效
                         this.enemyShootSound.currentTime = 0;
                         this.enemyShootSound.play().catch(e => console.log("音效播放失败:", e));
                     }
@@ -603,7 +547,7 @@
             }
 
             updateEnemyBullets() {
-                for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+                 for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
                     // 移动敌人子弹
                     this.enemyBullets[i].y += this.enemyBulletSpeed;
 
@@ -658,8 +602,9 @@
                     }
                 }
             }
-        drawExplosion(x, y, size) {
-                const colors = [
+
+            drawExplosion(x, y, size) {
+               const colors = [
                     'rgba(255, 179, 51, 1)',
                     'rgba(255, 128, 26, 1)',
                     'rgba(255, 77, 26, 1)',
@@ -683,11 +628,9 @@
             }
 
             drawInfoPanel() {
-                // 绘制半透明背景
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                 this.ctx.fillRect(0, 0, 150, 120);
 
-                // 绘制文本
                 this.ctx.fillStyle = 'white';
                 this.ctx.font = '12px Arial';
                 this.ctx.fillText(`分数: ${this.score}`, 10, 20);
@@ -701,33 +644,26 @@
             }
 
             levelUp() {
-                // 提高难度 降低与level同步的怪物能力
+                 // 提高难度和怪物能力同步降低
                 this.level++;
                 this.enemySpeed *= 1.05;
                 this.spawnRate = Math.min(this.spawnRate * 1.1, 0.08);
                 this.enemyFireRate = Math.min(this.enemyFireRate * 1.1, 0.04);
 
-                // 显示升级文本
                 this.ctx.font = '24px Arial';
                 this.ctx.fillStyle = 'yellow';
                 this.ctx.textAlign = 'center';
                 this.ctx.fillText(`升级到 ${this.level} 级!`, 200, 200);
                 this.ctx.textAlign = 'left';
 
-                // 播放升级音效
                 this.levelUpSound.currentTime = 0;
                 this.levelUpSound.play().catch(e => console.log("音效播放失败:", e));
             }
 
             gameOver() {
-                // 停止背景音乐
                 this.bgMusic.pause();
-
-                // 显示游戏结束屏幕
                 this.gameOverScreen.style.display = 'block';
                 this.finalScoreText.textContent = `最终分数: ${this.score}`;
-
-                // 设置等待重新开始标志
                 this.waitForRestart = true;
                 this.gameActive = false;
             }
