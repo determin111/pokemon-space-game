@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>宝可梦太空对战</title>
     <style>
+        /*  之前定义的css样式  */
         html, body {
             margin: 0;
             padding: 0;
@@ -133,12 +134,17 @@
                 this.invulnerable = false; // Player invulnerability state
                 this.invulnerableTimer = 0; // Timer for invulnerability
 
+                //【新增】角色等级
+                this.characterLevel = 1;
 
                 // 玩家相关参数
                 this.playerSize = 80;
                 this.playerPos = {x: 160, y: 450};
                 this.bullets = [];
                 this.bulletSpeed = 9;  // Adjusted player bullet
+                //【新增】激光相关参数
+                this.laserActive = false;
+                this.laserTimer = 0;
 
                 // 敌人相关参数 - Even further reduced difficulty
                 this.enemies = [];
@@ -373,15 +379,24 @@
             }
 
             fireBullet() {
-                // 从mega裂空座的口部位置发射龙息光线
-                this.bullets.push({
-                    x: this.playerPos.x + this.playerSize / 2,
-                    y: this.playerPos.y + this.playerSize / 4
-                });
+                //【修改】根据角色等级判断发射类型
+                if (this.characterLevel < 3) {
+                    // 从mega裂空座的口部位置发射龙息光线
+                    this.bullets.push({
+                        x: this.playerPos.x + this.playerSize / 2,
+                        y: this.playerPos.y + this.playerSize / 4
+                    });
 
-                // 播放射击音效
-                this.playerShootSound.currentTime = 0;
-                this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
+                    // 播放射击音效
+                    this.playerShootSound.currentTime = 0;
+                    this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
+                } else {
+                    // 激活激光
+                    this.laserActive = true;
+                    this.laserTimer = 2; // 激光持续2秒
+                    this.playerShootSound.currentTime = 0;
+                    this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
+                }
             }
 
             init() {
@@ -403,6 +418,10 @@
                 this.maxEnemies = 4;
                 this.invulnerable = false;  // Reset invulnerability on game start
                 this.invulnerableTimer = 0;
+                //【新增】重置角色等级
+                this.characterLevel = 1;
+                this.laserActive = false;
+                this.laserTimer = 0;
 
                 // 隐藏游戏结束屏幕
                 this.gameOverScreen.style.display = 'none';
@@ -450,6 +469,8 @@
                 this.updateEnemies(deltaTime);
                 this.updateEnemyBullets();
                 this.drawInfoPanel();
+                //【新增】更新激光状态
+                this.updateLaser(deltaTime);
 
                   if (this.score >= this.nextLevelScore) {
                     this.levelUp();
@@ -479,50 +500,93 @@
             }
 
             updateBullets() {
-                           for (let i = this.bullets.length - 1; i >= 0; i--) {
-                    this.bullets[i].y -= this.bulletSpeed;
-                    if (this.bullets[i].y < 0) {
-                        this.bullets.splice(i, 1);
-                        continue;
+                //【修改】只有当角色等级小于3时才更新子弹
+                if(this.characterLevel < 3){
+                    for (let i = this.bullets.length - 1; i >= 0; i--) {
+                        this.bullets[i].y -= this.bulletSpeed;
+                        if (this.bullets[i].y < 0) {
+                            this.bullets.splice(i, 1);
+                            continue;
+                        }
+
+                        const x = this.bullets[i].x;
+                        const y = this.bullets[i].y;
+                        const rayLen = 40;
+
+                        this.ctx.lineWidth = 5;
+                        this.ctx.strokeStyle = 'rgba(0, 180, 255, 1)';
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x - 1, y);
+                        this.ctx.lineTo(x + 1, y - rayLen);
+                        this.ctx.stroke();
+
+                        this.ctx.lineWidth = 8;
+                        this.ctx.strokeStyle = 'rgba(0, 128, 255, 0.5)';
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x - 3, y);
+                        this.ctx.lineTo(x + 3, y - rayLen * 0.8);
+                        this.ctx.stroke();
+
+                        this.ctx.fillStyle = 'rgba(0, 180, 255, 0.7)';
+                        this.ctx.beginPath();
+                        this.ctx.arc(x, y, 5, 0, Math.PI * 2);
+                        this.ctx.fill();
+
+                        for (let j = this.enemies.length - 1; j >= 0; j--) {
+                            const enemy = this.enemies[j];
+                            if (this.checkCollision(
+                                { x: x - 5, y: y - rayLen }, 12,
+                                { x: enemy.x, y: enemy.y }, this.enemySize
+                            )) {
+                                this.enemies.splice(j, 1);
+                                this.score += 5;
+                                this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
+                                this.explosionSound.currentTime = 0;
+                                this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
+                                this.bullets.splice(i, 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            //【新增】更新激光状态
+            updateLaser(deltaTime) {
+                if (this.laserActive) {
+                    // 绘制激光
+                    this.drawLaser();
+
+                    // 激光持续时间递减
+                    this.laserTimer -= deltaTime / 1000;
+
+                    // 检查激光是否结束
+                    if (this.laserTimer <= 0) {
+                        this.laserActive = false;
+                        this.laserTimer = 0;
                     }
 
-                    const x = this.bullets[i].x;
-                    const y = this.bullets[i].y;
-                    const rayLen = 40;
+                    // 激光碰撞检测
+                    this.laserCollisionDetection();
+                }
+            }
 
-                    this.ctx.lineWidth = 5;
-                    this.ctx.strokeStyle = 'rgba(0, 180, 255, 1)';
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(x - 1, y);
-                    this.ctx.lineTo(x + 1, y - rayLen);
-                    this.ctx.stroke();
+            //【新增】绘制激光
+            drawLaser() {
+                this.ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+                this.ctx.fillRect(0, this.playerPos.y - 10, this.canvas.width, 20);
+            }
 
-                    this.ctx.lineWidth = 8;
-                    this.ctx.strokeStyle = 'rgba(0, 128, 255, 0.5)';
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(x - 3, y);
-                    this.ctx.lineTo(x + 3, y - rayLen * 0.8);
-                    this.ctx.stroke();
-
-                    this.ctx.fillStyle = 'rgba(0, 180, 255, 0.7)';
-                    this.ctx.beginPath();
-                    this.ctx.arc(x, y, 5, 0, Math.PI * 2);
-                    this.ctx.fill();
-
-                    for (let j = this.enemies.length - 1; j >= 0; j--) {
-                        const enemy = this.enemies[j];
-                        if (this.checkCollision(
-                            { x: x - 5, y: y - rayLen }, 12,
-                            { x: enemy.x, y: enemy.y }, this.enemySize
-                        )) {
-                            this.enemies.splice(j, 1);
-                            this.score += 5;
-                            this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
-                            this.explosionSound.currentTime = 0;
-                            this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
-                            this.bullets.splice(i, 1);
-                            break;
-                        }
+            //【新增】激光碰撞检测
+            laserCollisionDetection() {
+                for (let i = this.enemies.length - 1; i >= 0; i--) {
+                    const enemy = this.enemies[i];
+                    if (enemy.y < this.playerPos.y + this.playerSize && enemy.y + this.enemySize > this.playerPos.y - 10) {
+                        this.enemies.splice(i, 1);
+                        this.score += 5;
+                        this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
+                        this.explosionSound.currentTime = 0;
+                        this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
                     }
                 }
             }
@@ -683,6 +747,8 @@
                 this.ctx.fillText(`分数: ${this.score}`, 10, 20);
                 this.ctx.fillText(`生命: ${this.lives}`, 10, 40);
                 this.ctx.fillText(`等级: ${this.level}`, 10, 60);
+                //【新增】显示角色等级
+                this.ctx.fillText(`角色等级: ${this.characterLevel}`, 10, 72);
 
                  this.ctx.fillStyle = this.invulnerable ? 'yellow' : 'white'; // Highlight when invulnerable
                 this.ctx.fillText(`无敌: ${this.invulnerable ? this.invulnerableTimer.toFixed(1) : '否'}`, 10, 75);
@@ -694,11 +760,13 @@
             }
 
             levelUp() {
-                    // 提高难度和怪物能力同步降低
+                // 提高难度和怪物能力同步降低
                 this.level++;
                 this.enemySpeed *= 1.04;
                 this.spawnRate = Math.min(this.spawnRate * 1.08, 0.07);
                 this.enemyFireRate = Math.min(this.enemyFireRate * 1.08, 0.035);
+                  //【新增】角色升级
+                this.characterLevelUp();
 
                 this.ctx.font = '24px Arial';
                 this.ctx.fillStyle = 'yellow';
@@ -708,7 +776,22 @@
 
                 this.levelUpSound.currentTime = 0;
                 this.levelUpSound.play().catch(e => console.log("播放音效失败:", e));
+
+                //【新增】角色升级
+                this.characterLevelUp();
             }
+            //【新增】角色升级函数
+        characterLevelUp() {
+            if (this.characterLevel < 3) {
+                this.characterLevel++;
+                this.invulnerable = true;
+                this.invulnerableTimer = 2;
+                // 可以添加一些视觉效果或音效来指示角色升级
+                console.log(`角色升级到等级${this.characterLevel}!`);
+            } else {
+                console.log("角色已达到最高等级!");
+            }
+        }
 
          gameOver() {
                 this.bgMusic.pause();
