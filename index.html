@@ -127,7 +127,7 @@
                 this.gamePaused = false;
                 this.waitForRestart = false;
                 this.score = 0;
-                this.lives = 3;
+                this.lives = 5; // 增加生命值
                 this.level = 1;
                 this.nextLevelScore = 20;
 
@@ -135,16 +135,16 @@
                 this.playerSize = 80;
                 this.playerPos = {x: 160, y: 450};
                 this.bullets = [];
-                this.bulletSpeed = 12;
+                this.bulletSpeed = 8; // 降低子弹速度
 
                 // 敌人相关参数
                 this.enemies = [];
                 this.enemySize = 50;
-                this.enemySpeed = 2;
-                this.spawnRate = 0.03;
-                this.enemyFireRate = 0.01;
+                this.enemySpeed = 1.5; // 降低敌人速度
+                this.spawnRate = 0.02; // 降低生成频率
+                this.enemyFireRate = 0.0075; // 降低射击频率
                 this.enemyBullets = [];
-                this.enemyBulletSpeed = 4;
+                this.enemyBulletSpeed = 3;
                 this.enemyBulletSize = 8;
 
                 // 加载图像
@@ -158,6 +158,10 @@
 
                 // 设置触摸控制
                 this.setupTouchControls();
+
+                 // 添加点击屏幕重新开始的事件监听器
+                document.addEventListener('mousedown', this.handleRestart.bind(this));  //鼠标点击
+                document.addEventListener('touchstart', this.handleRestart.bind(this)); //触摸
 
                 // 开始游戏循环
                 this.lastTime = 0;
@@ -244,6 +248,13 @@
                     }
                 });
             }
+
+            handleRestart(e) {
+                    if (this.waitForRestart) {
+                        e.preventDefault(); // 阻止默认行为
+                        this.init(); // 重新初始化游戏
+                    }
+                }
 
             setupTouchControls() {
                 const joystick = document.getElementById('joystick');
@@ -371,6 +382,10 @@
             }
 
             init() {
+                       // 降低怪物能力与玩家等级同步降低
+                this.enemySpeed = 1.5;
+                this.spawnRate = 0.02;
+                this.enemyFireRate = 0.0075;
                 // 重置游戏状态
                 this.gameActive = true;
                 this.gamePaused = false;
@@ -380,12 +395,12 @@
                 this.enemies = [];
                 this.enemyBullets = [];
                 this.score = 0;
-                this.lives = 3;
+                this.lives = 5 // 增加生命值;
                 this.level = 1;
                 this.nextLevelScore = 20;
-                this.enemySpeed = 2;
-                this.spawnRate = 0.03;
-                this.enemyFireRate = 0.01;
+                this.enemySpeed = 1.5; // 降低敌人速度
+                this.spawnRate = 0.02;   // 降低生成频率
+                this.enemyFireRate = 0.0075; // 降低射击频率
 
                 // 隐藏游戏结束屏幕
                 this.gameOverScreen.style.display = 'none';
@@ -686,11 +701,11 @@
             }
 
             levelUp() {
-                // 提高难度
+                // 提高难度 降低与level同步的怪物能力
                 this.level++;
-                this.enemySpeed *= 1.1;
-                this.spawnRate = Math.min(this.spawnRate * 1.2, 0.1);
-                this.enemyFireRate = Math.min(this.enemyFireRate * 1.2, 0.05);
+                this.enemySpeed *= 1.05;
+                this.spawnRate = Math.min(this.spawnRate * 1.1, 0.08);
+                this.enemyFireRate = Math.min(this.enemyFireRate * 1.1, 0.04);
 
                 // 显示升级文本
                 this.ctx.font = '24px Arial';
