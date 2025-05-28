@@ -127,25 +127,28 @@
                 this.gamePaused = false;
                 this.waitForRestart = false;
                 this.score = 0;
-                this.lives = 7; // Increased starting lives even further
+                this.lives = 7; // Adjusted starting lives
                 this.level = 1;
-                this.nextLevelScore = 25;  // Slightly increase score needed to level up
+                this.nextLevelScore = 25;  // Adjusted score needed to level up
+                this.invulnerable = false; // Player invulnerability state
+                this.invulnerableTimer = 0; // Timer for invulnerability
+
 
                 // 玩家相关参数
                 this.playerSize = 80;
                 this.playerPos = {x: 160, y: 450};
                 this.bullets = [];
-                this.bulletSpeed = 9;  // Slightly faster player bullets
+                this.bulletSpeed = 9;  // Adjusted player bullet
 
                 // 敌人相关参数 - Even further reduced difficulty
                 this.enemies = [];
                 this.enemySize = 50;
-                this.enemySpeed = 1.2; // further slowed enemy speed
-                this.spawnRate = 0.012; // even lower spawn rate now
-                this.maxEnemies = 4;   // even fewer max enemies
-                this.enemyFireRate = 0.006; // Reduce enemy fire rate even more
+                this.enemySpeed = 1.2; // Adjusted enemy speed
+                this.spawnRate = 0.012; // Adjusted spawn rate
+                this.maxEnemies = 4;   // Adjusted max enemies
+                this.enemyFireRate = 0.006; // Adjusted enemy fire rate
                 this.enemyBullets = [];
-                this.enemyBulletSpeed = 2.7; // Slower Enemy bullet speed
+                this.enemyBulletSpeed = 2.7; // Adjusted enemy bullet speed
                 this.enemyBulletSize = 8;
 
                 // 加载图像
@@ -243,7 +246,7 @@
                             if (this.gamePaused) {
                                 this.bgMusic.pause();
                             } else {
-                                this.bgMusic.play().catch(e => console.log("背景音乐播放失败:", e));
+                                this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
                             }
                             break;
                     }
@@ -355,7 +358,7 @@
                     if (this.gamePaused) {
                         this.bgMusic.pause();
                     } else {
-                        this.bgMusic.play().catch(e => console.log("音效播放失败:", e));
+                        this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
                     }
                 });
                 // 更新玩家移动
@@ -378,7 +381,7 @@
 
                 // 播放射击音效
                 this.playerShootSound.currentTime = 0;
-                this.playerShootSound.play().catch(e => console.log("音效播放失败:", e));
+                this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
             }
 
             init() {
@@ -398,19 +401,22 @@
                 this.enemySpeed = 1.2;
                 this.enemyFireRate = 0.006;
                 this.maxEnemies = 4;
+                this.invulnerable = false;  // Reset invulnerability on game start
+                this.invulnerableTimer = 0;
 
                 // 隐藏游戏结束屏幕
                 this.gameOverScreen.style.display = 'none';
 
                 // 开始背景音乐
-                this.bgMusic.play().catch(e => console.log("背景音乐播放失败:", e));
+                this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
 
                 // 开始游戏循环
                 requestAnimationFrame(this.gameLoop.bind(this));
             }
 
             gameLoop(timestamp) {
-                 const deltaTime = timestamp - this.lastTime;
+
+                const deltaTime = timestamp - this.lastTime;
                 this.lastTime = timestamp;
 
                 if (this.gamePaused) {
@@ -433,39 +439,47 @@
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 }
 
-                     // Generate new enemies (with the maximum limit check)
-                    if (Math.random() < this.spawnRate && this.enemies.length < this.maxEnemies) {
+                   // Generate new enemies (with the maximum limit check)
+                   if (Math.random() < this.spawnRate && this.enemies.length < this.maxEnemies) {
                     const x = Math.random() * (400 - this.enemySize);
                     this.enemies.push({ x: x, y: 0 });
-                }
+                   }
 
                 this.drawPlayer();
                 this.updateBullets();
-                this.updateEnemies();
+                this.updateEnemies(deltaTime);
                 this.updateEnemyBullets();
                 this.drawInfoPanel();
 
-                 if (this.score >= this.nextLevelScore) {
+                  if (this.score >= this.nextLevelScore) {
                     this.levelUp();
                     this.nextLevelScore = this.nextLevelScore * 2;
-                }
+                  }
 
-                   if (this.gameActive) {
+                    if (this.gameActive) {
                     requestAnimationFrame(this.gameLoop.bind(this));
                 }
             }
 
-            drawPlayer() {
+             drawPlayer() {
                 if (this.playerLoaded) {
-                    this.ctx.drawImage(this.playerImage, this.playerPos.x, this.playerPos.y, this.playerSize, this.playerSize);
+                    //  Flicker the player image if invulnerable
+                        if (this.invulnerable && Math.floor(Date.now() / 100) % 2) { // Blink effect
+                            return; // Skip drawing for flicker effect
+                        }
+                   this.ctx.drawImage(this.playerImage, this.playerPos.x, this.playerPos.y, this.playerSize, this.playerSize);
                 } else {
                     this.ctx.fillStyle = 'green';
+
+                      if (this.invulnerable && Math.floor(Date.now() / 100) % 2) { // Blink effect
+                         return; // Skip drawing for flicker effect
+                    }
                     this.ctx.fillRect(this.playerPos.x, this.playerPos.y, this.playerSize, this.playerSize);
                 }
             }
 
             updateBullets() {
-                   for (let i = this.bullets.length - 1; i >= 0; i--) {
+                           for (let i = this.bullets.length - 1; i >= 0; i--) {
                     this.bullets[i].y -= this.bulletSpeed;
                     if (this.bullets[i].y < 0) {
                         this.bullets.splice(i, 1);
@@ -505,7 +519,7 @@
                             this.score += 5;
                             this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
                             this.explosionSound.currentTime = 0;
-                            this.explosionSound.play().catch(e => console.log("音效播放失败:", e));
+                            this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
                             this.bullets.splice(i, 1);
                             break;
                         }
@@ -513,41 +527,71 @@
                 }
             }
 
-            updateEnemies() {
+            updateEnemies(deltaTime) {
                 for (let i = this.enemies.length - 1; i >= 0; i--) {
-                     this.enemies[i].y += this.enemySpeed;
-                    if (this.enemies[i].y > 600 - this.enemySize) {
-                        this.enemies.splice(i, 1);
-                        this.lives--;
+                    const enemy = this.enemies[i];
+
+                   // Collision check only if player is NOT invulnerable for now
+                 if (!this.invulnerable && this.checkCollision(
+                    { x: this.playerPos.x, y: this.playerPos.y }, this.playerSize,
+                    { x: enemy.x, y: enemy.y }, this.enemySize
+                )) {
+                       // Explosion on collision and player LOSES life:
+                        this.drawExplosion(
+                            this.playerPos.x + this.playerSize / 2,
+                            this.playerPos.y + this.playerSize / 2,
+                            this.playerSize / 2
+                        );
+                        this.explosionSound.currentTime = 0;
+                        this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
+
+                       this.lives--; // Player loses a life on collision
+                        this.enemies.splice(i, 1);   // Remove collided enemy
+
                         if (this.lives <= 0) {
                             this.gameOver();
                             return;
-                        }
-                        continue;
+                       }
+
+                        //Initiate invulnerability
+                        this.invulnerable = true;
+                        this.invulnerableTimer = 2;  // 2 seconds of invulnerability
+                   } else {                  // No collisison, proceed with updating enemies locations :
+                       this.enemies[i].y += this.enemySpeed;
+                          if (this.enemies[i].y > 600 - this.enemySize) {
+                             this.enemies.splice(i, 1);
+                          }
                     }
-
-                    const enemy = this.enemies[i];
-
-                    if (this.enemyLoaded) {
+                       //Check for enemy image validity:
+                     if (this.enemyLoaded) {
                         this.ctx.drawImage(this.enemyImage, enemy.x, enemy.y, this.enemySize, this.enemySize);
-                    } else {
+                     } else {
                         this.ctx.fillStyle = 'red';
                         this.ctx.fillRect(enemy.x, enemy.y, this.enemySize, this.enemySize);
-                    }
+                     }
 
-                  if (Math.random() < this.enemyFireRate) {
+                // Fire randomly from enemies when no explosion detected
+                   if (Math.random() < this.enemyFireRate) {
                         this.enemyBullets.push({
                             x: enemy.x + this.enemySize / 2,
-                            y: enemy.y + this.enemySize / 2
+                           y: enemy.y + this.enemySize / 2
                         });
                         this.enemyShootSound.currentTime = 0;
-                        this.enemyShootSound.play().catch(e => console.log("音效播放失败:", e));
+                         this.enemyShootSound.play().catch(e => console.log("播放音效失败:", e));
+                    }
+                }
+              // Update invulnerability timer
+              if (this.invulnerable) {
+                    this.invulnerableTimer -= deltaTime / 1000;  // Assuming deltatime in ms
+                   if (this.invulnerableTimer <= 0) {
+                       this.invulnerable = false;   // Turn off invulnerability
+                       this.invulnerableTimer = 0;  // Reset timer
                     }
                 }
             }
 
             updateEnemyBullets() {
-                  for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+                for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
                     // 移动敌人子弹
                     this.enemyBullets[i].y += this.enemyBulletSpeed;
 
@@ -562,7 +606,7 @@
                     // 绘制超能力球
                     const ballSize = this.enemyBulletSize;
 
-                    // 球体光晕效果
+                    //球体光晕效果
                     this.ctx.fillStyle = 'rgba(255, 77, 255, 0.3)';
                     this.ctx.beginPath();
                     this.ctx.arc(bullet.x, bullet.y, ballSize * 1.5, 0, Math.PI * 2);
@@ -574,8 +618,8 @@
                     this.ctx.arc(bullet.x, bullet.y, ballSize, 0, Math.PI * 2);
                     this.ctx.fill();
 
-                    // 检查是否击中玩家
-                    if (this.checkCollision(
+                     // 检查是否击中玩家  //Only collide when user is indeed not invulnerable
+                      if (!this.invulnerable && this.checkCollision(
                         {x: this.playerPos.x, y: this.playerPos.y}, this.playerSize,
                         {x: bullet.x, y: bullet.y}, ballSize * 2
                     )) {
@@ -588,7 +632,7 @@
 
                         // 播放爆炸音效
                         this.explosionSound.currentTime = 0;
-                        this.explosionSound.play().catch(e => console.log("音效播放失败:", e));
+                        this.explosionSound.play().catch(e => console.log("playSoundFail:", e));
 
                         // 减少生命值
                         this.lives--;
@@ -596,9 +640,12 @@
                             this.gameOver();
                             return;
                         }
+                        //Initiate invulnerability
+                         this.invulnerable = true;
+                       this.invulnerableTimer = 2;  // 2 seconds of invulnerability
 
-                        // 删除子弹
-                        this.enemyBullets.splice(i, 1);
+                      // 删除子弹
+                     this.enemyBullets.splice(i, 1);
                     }
                 }
             }
@@ -637,14 +684,17 @@
                 this.ctx.fillText(`生命: ${this.lives}`, 10, 40);
                 this.ctx.fillText(`等级: ${this.level}`, 10, 60);
 
+                 this.ctx.fillStyle = this.invulnerable ? 'yellow' : 'white'; // Highlight when invulnerable
+                this.ctx.fillText(`无敌: ${this.invulnerable ? this.invulnerableTimer.toFixed(1) : '否'}`, 10, 75);
+
                 this.ctx.font = '8px Arial';
-                this.ctx.fillText('移动: 摇杆', 10, 80);
+                this.ctx.fillText('移动: 摇杆', 10, 85);
                 this.ctx.fillText('射击: 火键', 10, 95);
                 this.ctx.fillText('暂停: 暂停键', 10, 110);
             }
 
             levelUp() {
-                  // 提高难度和怪物能力同步降低
+                    // 提高难度和怪物能力同步降低
                 this.level++;
                 this.enemySpeed *= 1.04;
                 this.spawnRate = Math.min(this.spawnRate * 1.08, 0.07);
@@ -657,10 +707,10 @@
                 this.ctx.textAlign = 'left';
 
                 this.levelUpSound.currentTime = 0;
-                this.levelUpSound.play().catch(e => console.log("音效播放失败:", e));
+                this.levelUpSound.play().catch(e => console.log("播放音效失败:", e));
             }
 
-            gameOver() {
+         gameOver() {
                 this.bgMusic.pause();
                 this.gameOverScreen.style.display = 'block';
                 this.finalScoreText.textContent = `最终分数: ${this.score}`;
@@ -683,3 +733,5 @@
             new PokemonSpaceGame();
         };
     </script>
+</body>
+</html>
