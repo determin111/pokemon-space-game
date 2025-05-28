@@ -2,22 +2,29 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>宝可梦太空对战</title>
     <style>
-        body {
+        html, body {
             margin: 0;
             padding: 0;
+            position: fixed;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             background-color: #000;
             font-family: Arial, sans-serif;
-            overflow: hidden;
         }
         #gameCanvas {
             border: 1px solid #333;
+            max-width: 100%;
+            max-height: 100%;
         }
         .game-over {
             position: absolute;
@@ -40,8 +47,7 @@
     <div class="game-over" id="gameOverScreen">
         <h1>游戏结束</h1>
         <p id="finalScore">最终分数: 0</p>
-        <p>按任意键重新开始</p>
-        <p>按ESC退出游戏</p>
+        <p>按任意键或点击屏幕重新开始</p>
     </div>
 
     <script>
@@ -88,6 +94,9 @@
                 // 设置键盘事件监听
                 this.setupKeyboardControls();
                 
+                // 设置触摸控制
+                this.setupTouchControls();
+                
                 // 开始游戏循环
                 this.lastTime = 0;
                 this.init();
@@ -130,16 +139,12 @@
                 document.addEventListener('keydown', (e) => {
                     // 处理游戏结束后的重新开始
                     if (this.waitForRestart) {
-                        if (e.key === 'Escape') {
-                            window.close();
-                        } else {
-                            this.init();
-                        }
+                        this.init();
                         return;
                     }
                     
                     // 处理游戏暂停状态下的按键
-                    if (this.gamePaused && e.key !== 'p' && e.key !== 'Escape') {
+                    if (this.gamePaused && e.key !== 'p') {
                         return;
                     }
                     
@@ -177,11 +182,167 @@
                                 this.bgMusic.play().catch(e => console.log("背景音乐播放失败:", e));
                             }
                             break;
-                        case 'Escape':
-                            window.close();
-                            break;
                     }
                 });
+            }
+            
+            setupTouchControls() {
+                // 触摸控制区域
+                const touchZones = {
+                    left: {x: 0, y: this.canvas.height - 100, width: 100, height: 100},
+                    right: {x: 100, y: this.canvas.height - 100, width: 100, height: 100},
+                    up: {x: 0, y: this.canvas.height - 200, width: 100, height: 100},
+                    down: {x: 100, y: this.canvas.height - 200, width: 100, height: 100},
+                    fire: {x: this.canvas.width - 100, y: this.canvas.height - 100, width: 100, height: 100},
+                    pause: {x: this.canvas.width - 100, y: 0, width: 100, height: 50}
+                };
+                
+                // 绘制触摸控制区域
+                this.drawTouchControls = () => {
+                    this.ctx.globalAlpha = 0.3;
+                    
+                    // 方向键
+                    this.ctx.fillStyle = 'gray';
+                    this.ctx.fillRect(touchZones.left.x, touchZones.left.y, touchZones.left.width, touchZones.left.height);
+                    this.ctx.fillRect(touchZones.right.x, touchZones.right.y, touchZones.right.width, touchZones.right.height);
+                    this.ctx.fillRect(touchZones.up.x, touchZones.up.y, touchZones.up.width, touchZones.up.height);
+                    this.ctx.fillRect(touchZones.down.x, touchZones.down.y, touchZones.down.width, touchZones.down.height);
+                    
+                    // 射击按钮
+                    this.ctx.fillStyle = 'red';
+                    this.ctx.fillRect(touchZones.fire.x, touchZones.fire.y, touchZones.fire.width, touchZones.fire.height);
+                    
+                    // 暂停按钮
+                    this.ctx.fillStyle = 'blue';
+                    this.ctx.fillRect(touchZones.pause.x, touchZones.pause.y, touchZones.pause.width, touchZones.pause.height);
+                    
+                    // 按钮图标
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.font = '24px Arial';
+                    this.ctx.fillText('←', touchZones.left.x + 40, touchZones.left.y + 60);
+                    this.ctx.fillText('→', touchZones.right.x + 40, touchZones.right.y + 60);
+                    this.ctx.fillText('↑', touchZones.up.x + 40, touchZones.up.y + 60);
+                    this.ctx.fillText('↓', touchZones.down.x + 40, touchZones.down.y + 60);
+                    this.ctx.fillText('🔥', touchZones.fire.x + 40, touchZones.fire.y + 60);
+                    this.ctx.fillText('⏸️', touchZones.pause.x + 40, touchZones.pause.y + 30);
+                    
+                    this.ctx.globalAlpha = 1.0;
+                };
+                
+                // 触摸事件处理
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    
+                    // 处理游戏结束后的重新开始
+                    if (this.waitForRestart) {
+                        this.init();
+                        return;
+                    }
+                    
+                    for (let i = 0; i < e.touches.length; i++) {
+                        const touch = e.touches[i];
+                        const x = touch.clientX - this.canvas.getBoundingClientRect().left;
+                        const y = touch.clientY - this.canvas.getBoundingClientRect().top;
+                        
+                        // 调整坐标以适应画布缩放
+                        const scaleX = this.canvas.width / this.canvas.clientWidth;
+                        const scaleY = this.canvas.height / this.canvas.clientHeight;
+                        const canvasX = x * scaleX;
+                        const canvasY = y * scaleY;
+                        
+                        // 检查触摸位置
+                        if (this.isInZone(canvasX, canvasY, touchZones.pause)) {
+                            this.gamePaused = !this.gamePaused;
+                            if (this.gamePaused) {
+                                this.bgMusic.pause();
+                            } else {
+                                this.bgMusic.play().catch(e => console.log("背景音乐播放失败:", e));
+                            }
+                            continue;
+                        }
+                        
+                        // 如果游戏暂停，不处理其他触摸
+                        if (this.gamePaused) continue;
+                        
+                        if (this.isInZone(canvasX, canvasY, touchZones.left)) {
+                            this.playerPos.x = Math.max(0, this.playerPos.x - 15);
+                        }
+                        if (this.isInZone(canvasX, canvasY, touchZones.right)) {
+                            this.playerPos.x = Math.min(400 - this.playerSize, this.playerPos.x + 15);
+                        }
+                        if (this.isInZone(canvasX, canvasY, touchZones.up)) {
+                            this.playerPos.y = Math.max(0, this.playerPos.y - 15);
+                        }
+                        if (this.isInZone(canvasX, canvasY, touchZones.down)) {
+                            this.playerPos.y = Math.min(600 - this.playerSize * 1.2, this.playerPos.y + 15);
+                        }
+                        if (this.isInZone(canvasX, canvasY, touchZones.fire)) {
+                            // 从mega裂空座的口部位置发射龙息光线
+                            this.bullets.push({
+                                x: this.playerPos.x + this.playerSize / 2,
+                                y: this.playerPos.y + this.playerSize / 4
+                            });
+                            
+                            // 播放射击音效
+                            this.playerShootSound.currentTime = 0;
+                            this.playerShootSound.play().catch(e => console.log("音效播放失败:", e));
+                        }
+                    }
+                });
+                
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    
+                    if (this.gamePaused || this.waitForRestart) return;
+                    
+                    for (let i = 0; i < e.touches.length; i++) {
+                        const touch = e.touches[i];
+                        const x = touch.clientX - this.canvas.getBoundingClientRect().left;
+                        const y = touch.clientY - this.canvas.getBoundingClientRect().top;
+                        
+                        // 调整坐标以适应画布缩放
+                        const scaleX = this.canvas.width / this.canvas.clientWidth;
+                        const scaleY = this.canvas.height / this.canvas.clientHeight;
+                        const canvasX = x * scaleX;
+                        const canvasY = y * scaleY;
+                        
+                        if (this.isInZone(canvasX, canvasY, touchZones.left)) {
+                            this.playerPos.x = Math.max(0, this.playerPos.x - 15);
+                        }
+                        if (this.isInZone(canvasX, canvasY, touchZones.right)) {
+                            this.playerPos.x = Math.min(400 - this.playerSize, this.playerPos.x + 15);
+                        }
+                        if (this.isInZone(canvasX, canvasY, touchZones.up)) {
+                            this.playerPos.y = Math.max(0, this.playerPos.y - 15);
+                        }
+                        if (this.isInZone(canvasX, canvasY, touchZones.down)) {
+                            this.playerPos.y = Math.min(600 - this.playerSize * 1.2, this.playerPos.y + 15);
+                        }
+                        if (this.isInZone(canvasX, canvasY, touchZones.fire)) {
+                            if (Math.random() < 0.2) { // 降低触摸射击的频率
+                                this.bullets.push({
+                                    x: this.playerPos.x + this.playerSize / 2,
+                                    y: this.playerPos.y + this.playerSize / 4
+                                });
+                                
+                                this.playerShootSound.currentTime = 0;
+                                this.playerShootSound.play().catch(e => console.log("音效播放失败:", e));
+                            }
+                        }
+                    }
+                });
+                
+                // 添加点击事件处理游戏结束重启
+                this.canvas.addEventListener('click', () => {
+                    if (this.waitForRestart) {
+                        this.init();
+                    }
+                });
+            }
+            
+            isInZone(x, y, zone) {
+                return x >= zone.x && x <= zone.x + zone.width && 
+                       y >= zone.y && y <= zone.y + zone.height;
             }
             
             init() {
@@ -218,6 +379,21 @@
                 
                 // 检查游戏暂停状态
                 if (this.gamePaused) {
+                    // 在暂停状态下显示暂停文本
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    
+                    this.ctx.font = '30px Arial';
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('游戏暂停', this.canvas.width / 2, this.canvas.height / 2);
+                    this.ctx.textAlign = 'left';
+                    
+                    // 在移动设备上显示触摸控制
+                    if ('ontouchstart' in window) {
+                        this.drawTouchControls();
+                    }
+                    
                     requestAnimationFrame(this.gameLoop.bind(this));
                     return;
                 }
@@ -258,6 +434,11 @@
                 if (this.score >= this.nextLevelScore) {
                     this.levelUp();
                     this.nextLevelScore = this.nextLevelScore * 2;
+                }
+                
+                // 在移动设备上显示触摸控制
+                if ('ontouchstart' in window) {
+                    this.drawTouchControls();
                 }
                 
                 // 继续游戏循环
@@ -474,22 +655,17 @@
                 }
             }
             
-            drawInfoPanel() {
+                        drawInfoPanel() {
                 // 绘制半透明背景
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                this.ctx.fillRect(0, 0, 150, 120);
+                this.ctx.fillRect(0, 0, 150, 80);
                 
                 // 绘制文本
                 this.ctx.fillStyle = 'white';
-                this.ctx.font = '12px Arial';
-                this.ctx.fillText(`分数: ${this.score}`, 10, 20);
-                this.ctx.fillText(`生命: ${this.lives}`, 10, 40);
-                this.ctx.fillText(`等级: ${this.level}`, 10, 60);
-                
-                this.ctx.font = '8px Arial';
-                this.ctx.fillText('移动: 方向键', 10, 80);
-                this.ctx.fillText('射击: 空格', 10, 95);
-                this.ctx.fillText('暂停: P键', 10, 110);
+                this.ctx.font = '16px Arial';
+                this.ctx.fillText(`分数: ${this.score}`, 10, 25);
+                this.ctx.fillText(`生命: ${this.lives}`, 10, 50);
+                this.ctx.fillText(`等级: ${this.level}`, 10, 75);
             }
             
             levelUp() {
@@ -536,7 +712,62 @@
         
         // 当页面加载完成后启动游戏
         window.onload = function() {
-            new PokemonSpaceGame();
+            // 为移动设备添加特殊处理
+            if ('ontouchstart' in window) {
+                // 阻止双击缩放
+                document.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                }, { passive: false });
+                
+                // 阻止默认滚动行为
+                document.body.style.overflow = 'hidden';
+                document.body.style.position = 'fixed';
+                
+                // 自动播放音频的特殊处理
+                document.addEventListener('touchstart', function() {
+                    // 创建静音音频并播放，解锁音频API
+                    const silentSound = new Audio();
+                    silentSound.play().catch(e => {});
+                }, { once: true });
+            }
+            
+            // 初始化游戏
+            const game = new PokemonSpaceGame();
+            
+            // 适配不同屏幕尺寸
+            function resizeCanvas() {
+                const canvas = document.getElementById('gameCanvas');
+                const gameOverScreen = document.getElementById('gameOverScreen');
+                
+                // 计算适合窗口的尺寸，保持比例
+                const windowRatio = window.innerWidth / window.innerHeight;
+                const gameRatio = 400 / 600;
+                
+                let newWidth, newHeight;
+                
+                if (windowRatio > gameRatio) {
+                    // 窗口更宽，以高度为基准
+                    newHeight = Math.min(window.innerHeight, 600);
+                    newWidth = newHeight * gameRatio;
+                } else {
+                    // 窗口更高，以宽度为基准
+                    newWidth = Math.min(window.innerWidth, 400);
+                    newHeight = newWidth / gameRatio;
+                }
+                
+                // 设置画布CSS尺寸（显示尺寸）
+                canvas.style.width = `${newWidth}px`;
+                canvas.style.height = `${newHeight}px`;
+                
+                // 设置游戏结束屏幕位置
+                gameOverScreen.style.top = `${(window.innerHeight - newHeight) / 2 + newHeight / 3}px`;
+                gameOverScreen.style.left = `${(window.innerWidth - newWidth) / 2 + newWidth / 4}px`;
+                gameOverScreen.style.width = `${newWidth / 2}px`;
+            }
+            
+            // 初始调整和监听窗口大小变化
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
         };
     </script>
 </body>
