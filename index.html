@@ -59,9 +59,40 @@
             height: 50px;
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 50%;  /* 使手柄变成圆形 */
-                position: absolute;
-
+            position: absolute;
         }
+
+         #fire-button {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            user-select: none; /* 禁止文本选择 */
+        }
+
+        #pause-button {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        width: 60px;
+        height: 40px;
+        background-color: rgba(0, 0, 255, 0.7);
+        border-radius: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 18px;
+        user-select: none; /* 禁止文本选择 */
+    }
     </style>
 </head>
 <body>
@@ -74,8 +105,12 @@
 
     <!-- 摇杆 -->
     <div id="joystick">
-        <div id="joystick-handle"></div>      
+        <div id="joystick-handle"></div>
     </div>
+     <!-- 射击按钮 -->
+    <div id="fire-button">🔥</div>
+     <!-- 暂停按钮 -->
+    <div id="pause-button">⏸️</div>
 
     <script>
         // 游戏主类
@@ -194,15 +229,7 @@
                             this.playerPos.y = Math.min(600 - this.playerSize * 1.2, this.playerPos.y + 15);
                             break;
                         case ' ': // 空格键
-                            // 从mega裂空座的口部位置发射龙息光线
-                            this.bullets.push({
-                                x: this.playerPos.x + this.playerSize / 2,
-                                y: this.playerPos.y + this.playerSize / 4
-                            });
-
-                            // 播放射击音效
-                            this.playerShootSound.currentTime = 0;
-                            this.playerShootSound.play().catch(e => console.log("音效播放失败:", e));
+                            this.fireBullet();
                             break;
                         case 'p':
                             this.gamePaused = !this.gamePaused;
@@ -221,12 +248,17 @@
             setupTouchControls() {
                 const joystick = document.getElementById('joystick');
                 const joystickHandle = document.getElementById('joystick-handle');
+                const fireButton = document.getElementById('fire-button');
+                const pauseButton = document.getElementById('pause-button');
                 let joystickBaseX, joystickBaseY;
                 let joystickTouchId = null;  // 用于跟踪触摸ID
                 let playerDirectionX = 0, playerDirectionY = 0; // 玩家移动方向
 
                 // 检查触摸是否在指定范围内
-            
+                const isInZone = (x, y, zone) => {
+                    return x >= zone.x && x <= zone.x + zone.width &&
+                        y >= zone.y && y <= zone.y + zone.height;
+                };
 
                 joystick.addEventListener('touchstart', (e) => {
                     e.preventDefault();
@@ -256,18 +288,17 @@
                             // 计算触摸点距离中心点的距离
                             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
                             const maxDistance = joystick.offsetWidth / 2;                // 计算方向，归一化向量
-                                playerDirectionX = deltaX / maxDistance;
-                                playerDirectionY = deltaY / maxDistance;
-                                // 限定最大距离
-                                if (distance > maxDistance) {
-                                    playerDirectionX = deltaX / distance;
-                                    playerDirectionY = deltaY / distance;
-                                }
+                            playerDirectionX = deltaX / maxDistance;
+                            playerDirectionY = deltaY / maxDistance;
+                            // 限定最大距离
+                            if (distance > maxDistance) {
+                                playerDirectionX = deltaX / distance;
+                                playerDirectionY = deltaY / distance;
+                            }
 
-                                // 更新手柄位置
-                                joystickHandle.style.left = `${joystickBaseX + playerDirectionX * maxDistance - 25}px`;
-                                joystickHandle.style.top = `${joystickBaseY + playerDirectionY * maxDistance - 25}px`;
-
+                            // 更新手柄位置
+                            joystickHandle.style.left = `${joystickBaseX + playerDirectionX * maxDistance - 25}px`;
+                            joystickHandle.style.top = `${joystickBaseY + playerDirectionY * maxDistance - 25}px`;
                         }
                     }
                 }, { passive: false });
@@ -296,21 +327,49 @@
                     joystickHandle.style.top = `${50 - 25}px`;
                 }, { passive: false });
 
+                // 射击按钮事件
+                fireButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.fireBullet();
+
+                });
+
+                // 暂停按钮事件
+                pauseButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.gamePaused = !this.gamePaused;
+
+                    // 处理背景音乐
+                    if (this.gamePaused) {
+                        this.bgMusic.pause();
+                    } else {
+                        this.bgMusic.play().catch(e => console.log("背景音乐播放失败:", e));
+                    }
+                });
                 // 更新玩家移动
                 this.updatePlayerPosition = () => {
                     const speed = 5; // 调整速度
                     this.playerPos.x += playerDirectionX * speed;
                     this.playerPos.y += playerDirectionY * speed;
-
                     // 边界检查
                     this.playerPos.x = Math.max(0, Math.min(this.playerPos.x, 400 - this.playerSize));
                     this.playerPos.y = Math.max(0, Math.min(this.playerPos.y, 600 - this.playerSize * 1.2));
                 };
             }
-            isInZone(x, y, zone) {
-                return x >= zone.x && x <= zone.x + zone.width &&
-                    y >= zone.y && y <= zone.y + zone.height;
+
+
+            fireBullet() {
+                // 从mega裂空座的口部位置发射龙息光线
+                this.bullets.push({
+                    x: this.playerPos.x + this.playerSize / 2,
+                    y: this.playerPos.y + this.playerSize / 4
+                });
+
+                // 播放射击音效
+                this.playerShootSound.currentTime = 0;
+                this.playerShootSound.play().catch(e => console.log("音效播放失败:", e));
             }
+
             init() {
                 // 重置游戏状态
                 this.gameActive = true;
@@ -345,7 +404,7 @@
 
                 // 检查游戏暂停状态
                 if (this.gamePaused) {
-                    // 在暂停状态下显示暂停文本
+                         // 在暂停状态下显示暂停文本
                     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -354,11 +413,9 @@
                     this.ctx.textAlign = 'center';
                     this.ctx.fillText('游戏暂停', this.canvas.width / 2, this.canvas.height / 2);
                     this.ctx.textAlign = 'left';
-
                     requestAnimationFrame(this.gameLoop.bind(this));
                     return;
                 }
-
                 // 清除屏幕
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -586,8 +643,7 @@
                     }
                 }
             }
-
-            drawExplosion(x, y, size) {
+        drawExplosion(x, y, size) {
                 const colors = [
                     'rgba(255, 179, 51, 1)',
                     'rgba(255, 128, 26, 1)',
@@ -614,14 +670,19 @@
             drawInfoPanel() {
                 // 绘制半透明背景
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                this.ctx.fillRect(0, 0, 150, 80);
+                this.ctx.fillRect(0, 0, 150, 120);
 
                 // 绘制文本
                 this.ctx.fillStyle = 'white';
-                this.ctx.font = '16px Arial';
-                this.ctx.fillText(`分数: ${this.score}`, 10, 25);
-                this.ctx.fillText(`生命: ${this.lives}`, 10, 50);
-                this.ctx.fillText(`等级: ${this.level}`, 10, 75);
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText(`分数: ${this.score}`, 10, 20);
+                this.ctx.fillText(`生命: ${this.lives}`, 10, 40);
+                this.ctx.fillText(`等级: ${this.level}`, 10, 60);
+
+                this.ctx.font = '8px Arial';
+                this.ctx.fillText('移动: 摇杆', 10, 80);
+                this.ctx.fillText('射击: 火键', 10, 95);
+                this.ctx.fillText('暂停: 暂停键', 10, 110);
             }
 
             levelUp() {
@@ -668,62 +729,7 @@
 
         // 当页面加载完成后启动游戏
         window.onload = function() {
-            // 为移动设备添加特殊处理
-            if ('ontouchstart' in window) {
-                // 阻止双击缩放
-                document.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                }, { passive: false });
-
-                // 阻止默认滚动行为
-                document.body.style.overflow = 'hidden';
-                document.body.style.position = 'fixed';
-
-                // 自动播放音频的特殊处理
-                document.addEventListener('touchstart', function() {
-                    // 创建静音音频并播放，解锁音频API
-                    const silentSound = new Audio();
-                    silentSound.play().catch(e => {});
-                }, { once: true });
-            }
-
-            // 初始化游戏
-            const game = new PokemonSpaceGame();
-
-            // 适配不同屏幕尺寸
-            function resizeCanvas() {
-                const canvas = document.getElementById('gameCanvas');
-                const gameOverScreen = document.getElementById('gameOverScreen');
-
-                // 计算适合窗口的尺寸，保持比例
-                const windowRatio = window.innerWidth / window.innerHeight;
-                const gameRatio = 400 / 600;
-
-                let newWidth, newHeight;
-
-                if (windowRatio > gameRatio) {
-                    // 窗口更宽，以高度为基准
-                    newHeight = Math.min(window.innerHeight, 600);
-                    newWidth = newHeight * gameRatio;
-                } else {
-                    // 窗口更高，以宽度为基准
-                    newWidth = Math.min(window.innerWidth, 400);
-                    newHeight = newWidth / gameRatio;
-                }
-
-                // 设置画布CSS尺寸（显示尺寸）
-                canvas.style.width = `${newWidth}px`;
-                canvas.style.height = `${newHeight}px`;
-
-                // 设置游戏结束屏幕位置
-                gameOverScreen.style.top = `${(window.innerHeight - newHeight) / 2 + newHeight / 3}px`;
-                gameOverScreen.style.left = `${(window.innerWidth - newWidth) / 2 + newWidth / 4}px`;
-                gameOverScreen.style.width = `${newWidth / 2}px`;
-            }
-
-            // 初始调整和监听窗口大小变化
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
+            new PokemonSpaceGame();
         };
     </script>
 </body>
