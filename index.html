@@ -553,7 +553,8 @@
                 for (let i = -1; i <= 1; i++) {
                     const angle = (i * 15) * Math.PI / 180;
 
-                    this.enemyBullets.push({x: enemy.x + this.enemySize / 2,
+                    this.enemyBullets.push({
+                        x: enemy.x + this.enemySize / 2,
                         y: enemy.y + this.enemySize,
                         angle: angle
                     });
@@ -758,8 +759,7 @@
 
                     if (bullet.y > this.canvas.height || bullet.x < 0 || bullet.x > this.canvas.width) {
                         this.enemyBullets.splice(i, 1);
-                        continue;
-                    }
+                        continue;                    }
 
                     const ballSize = this.enemyBulletSize;
                     this.ctx.fillStyle = 'rgba(255, 77, 255, 0.3)';
@@ -1050,10 +1050,10 @@
 
                 if (this.isMultiplayerMode && !this.isMultiplayerClient) {
                     this.drawOtherPlayers();
-                    this.updateOtherPlayers(deltaTime);
+                   // this.updateOtherPlayers(deltaTime);
 
                     // THIS instance moves the otherPlayer instance, based on ITS movement updates.
-                    this.otherGameInstance.updateEnemies(deltaTime);
+                    this.updateEnemies(deltaTime, this.otherGameInstance.enemies);
 
                     // THIS instance also does collision detection FOR  the other instance, in ITS set of enemies.
                     this.updateEnemyBullets(this.otherGameInstance.enemies);
@@ -1061,7 +1061,7 @@
 
                 this.drawPlayer();
                 this.updateBullets();
-                this.updateEnemies(deltaTime);
+                this.updateEnemies(deltaTime, this.enemies);
                 this.updateEnemyBullets();
                 this.updateLaser(deltaTime);
                 this.drawInfoPanel();
@@ -1258,35 +1258,45 @@
                 }
             }
 
-            laserCollisionDetection() {
-            //Laser Collision only on this instance of the game.
-                if (this.laserActive) {
-                    const laserWidth = 10;
-                    const laserRect = {
-                            x: this.playerPos.x + this.playerSize / 2 - laserWidth / 2,
-                            y: 0,
-                            width: laserWidth,
-                            height: this.playerPos.y
-                    };
+    laserCollisionDetection(enemies = this.enemies, gameInstance = this) {
+        // Only perform laser collision detection if the laser is active AND the game is active!
+        if (this.laserActive && this.gameActive) { // Ensure both conditions are met!
+            const laserWidth = 10;
+            const laserRect = {
+                x: this.playerPos.x + this.playerSize / 2 - laserWidth / 2,
+                y: 0,
+                width: laserWidth,
+                height: this.playerPos.y  // Extends to the top of the canvas
+            };
 
-                    for (let i = this.enemies.length - 1; i >= 0; i--) {
-                        const enemy = this.enemies[i];
-                        const enemyRect = {
-                            x: enemy.x,
-                            y: enemy.y,
-                            width: this.enemySize,
-                            height: this.enemySize
-                        };
-                        if (this.checkCollision(laserRect, enemyRect)) {
-                                this.enemies.splice(i, 1);
-                                this.score += 5;
-                                this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
-                                this.explosionSound.currentTime = 0;
-                                this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
-                        }
-                   }
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const enemyRect = {
+                    x: enemy.x,
+                    y: enemy.y,
+                    width: this.enemySize,
+                    height: this.enemySize
+                };
+
+                // Use the checkCollision function to precisely detect laser-enemy overlap
+                if (this.checkCollision(laserRect, enemyRect)) {
+                    // Collision detected!  Apply damage / handle the hit.
+
+                    // *** IMPORTANT: Enemy is hit! You must handle the consequences here! ***
+                    // Remove the enemy, increase score, create explosion, play sound...
+                    enemies.splice(i, 1);  // Remove the enemy from the array!
+                    this.score += 5;           // Increase the player's score.
+                    this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);  // Add visual effect.
+                    this.explosionSound.currentTime = 0;  // Reset audio
+                    this.explosionSound.play().catch(e => console.log("播放音效失败:", e)); // Play explosion sound
+
+                    // **BREAK** Very important: After a collision, stop checking other enemies!
+                    //                  Laser *cannot* hit multiple enemies in the same frame unless multi-collision is desired.
+                    break; // Prevent double hits because the laser remains active during the fraem!
                 }
             }
+        }
+    }
 
             toggleLeaderboard() {
                 this.leaderboardElement.style.display =
