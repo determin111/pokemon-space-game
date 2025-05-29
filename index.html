@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>宝可梦太空对战</title>
     <style>
-        /* ... existing code ... */
         html,
         body {
             margin: 0;
@@ -175,107 +174,6 @@
             cursor: pointer;
             display: none;
         }
-
-        /* Multiplayer Panel Styles */
-        #multiplayer-panel {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            display: none;
-            z-index: 2000;
-            width: 80%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        #multiplayer-panel h2 {
-            margin-top: 0;
-            color: #00FF00;
-        }
-
-        #multiplayer-panel input,
-        #multiplayer-panel button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin: 10px auto;
-            border-radius: 5px;
-            border: none;
-        }
-
-        #multiplayer-panel button {
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #multiplayer-panel button:hover {
-            background-color: #367c39;
-        }
-
-        #player-list {
-            margin-top: 20px;
-            padding: 10px;
-            border-top: 1px solid #555;
-        }
-
-        #player-list h3 {
-            margin-bottom: 10px;
-            color: #DDD;
-        }
-
-        #player-list div {
-            padding: 8px;
-            margin: 5px 0;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            text-align: left;
-        }
-
-        #show-multiplayer-button {
-            position: absolute;
-            top: 30px;
-            left: 140px;
-            width: 100px;
-            height: 40px;
-            background-color: rgba(255, 165, 0, 0.7);
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: black;
-            font-size: 14px;
-            user-select: none;
-            cursor: pointer;
-            display: none;
-        }
-
-        /* 连接状态指示器 */
-        #connection-status {
-            position: absolute;
-            top: 80px;
-            right: 30px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            display: none;
-        }
-
-        .status-connected {
-            background-color: rgba(0, 255, 0, 0.7) !important;
-        }
-
-        .status-disconnected {
-            background-color: rgba(255, 0, 0, 0.7) !important;
-        }
     </style>
 </head>
 
@@ -310,26 +208,6 @@
     <!-- 显示排行榜按钮 -->
     <div id="show-leaderboard-button">查看排行榜</div>
 
-    <!-- Multiplayer Button -->
-    <div id="show-multiplayer-button">多人联机</div>
-
-    <!-- 连接状态指示器 -->
-    <div id="connection-status">离线模式</div>
-
-    <!-- Multiplayer Panel -->
-    <div id="multiplayer-panel">
-        <h2>多人联机模式</h2>
-        <input type="text" id="player-name" placeholder="输入你的游戏名称">
-        <button id="create-room-btn">创建房间</button>
-        <button id="join-room-btn">加入房间</button>
-        <input type="text" id="room-id" placeholder="输入房间ID" style="display:none;">
-        <button id="start-game-btn" style="display:none;">开始游戏</button>
-        <div id="player-list">
-            <h3>在线玩家</h3>
-        </div>
-        <button id="close-panel-btn">关闭</button>
-    </div>
-
     <script>
         console.log("JavaScript file loaded and running");
         class PokemonSpaceGame {
@@ -347,18 +225,6 @@
                 this.leaderboardList = document.getElementById('leaderboard-list');
                 this.showLeaderboardButton = document.getElementById('show-leaderboard-button');
 
-                // Multiplayer elements
-                this.multiplayerPanel = document.getElementById('multiplayer-panel');
-                this.showMultiplayerButton = document.getElementById('show-multiplayer-button');
-                this.playerNameInput = document.getElementById('player-name');
-                this.createRoomBtn = document.getElementById('create-room-btn');
-                this.joinRoomBtn = document.getElementById('join-room-btn');
-                this.roomIdInput = document.getElementById('room-id');
-                this.startGameBtn = document.getElementById('start-game-btn');
-                this.playerList = document.getElementById('player-list');
-                this.closePanelBtn = document.getElementById('close-panel-btn');
-                this.connectionStatus = document.getElementById('connection-status');
-
                 // Game state
                 this.gameActive = false;
                 this.gamePaused = false;
@@ -371,17 +237,8 @@
                 this.invulnerableTimer = 0;
                 this.characterLevel = 1;
                 this.maxCharacterLevel = 6;
-                this.playerName = "";
                 this.inIntro = true;
                 this.introVideoStarted = false;
-
-                // Multiplayer Variables
-                this.isMultiplayerMode = false;
-                this.roomId = null;
-                this.clientPlayer = null;
-                this.otherPlayers = {};
-                this.ws = null; // WebSocket连接
-                this.isHost = false; // 是否为房主
 
                 // Player properties
                 this.playerSize = 80;
@@ -391,7 +248,7 @@
                 this.bulletSpeed = 9;
                 this.laserActive = false;
                 this.laserTimer = 0;
-                this.laserDamage = 10; // 激光伤害值
+                this.laserDamage = 10;
 
                 // Enemy properties
                 this.enemies = [];
@@ -418,137 +275,13 @@
                 this.setupTouchControls();
 
                 // Event listeners
-                this.introScreen.addEventListener('mousedown', this.handleIntroClick.bind(this));
+                this.introScreen.addEventListener('click', this.handleIntroClick.bind(this));
                 this.introScreen.addEventListener('touchstart', this.handleIntroClick.bind(this));
                 this.showLeaderboardButton.addEventListener('click', this.toggleLeaderboard.bind(this));
-                this.showMultiplayerButton.addEventListener('click', this.showMultiplayerPanel.bind(this));
-                this.createRoomBtn.addEventListener('click', this.createRoom.bind(this));
-                this.joinRoomBtn.addEventListener('click', this.joinRoom.bind(this));
-                this.closePanelBtn.addEventListener('click', this.closeMultiplayerPanel.bind(this));
-                
-                this.addBasePlayer(this.playerName);
 
                 console.log("Event listeners attached.");
                 this.lastTime = 0;
                 this.init();
-            }
-
-            // Create client player for multiplayer
-            addBasePlayer(name) {
-                this.clientPlayer = {
-                    "id": this.generatePlayerId(),
-                    "name": name,
-                    "width": 80,
-                    "height": 80,
-                    "pos": { x: 160, y: 450 },
-                    "score": 0,
-                    "lives": 7
-                }
-            }
-
-            generatePlayerId() {
-                return 'player_' + Math.random().toString(36).substr(2, 9);
-            }
-
-            /* Multiplayer Methods ************************************************************************************* */
-            showMultiplayerPanel() {
-                this.gamePaused = true;
-                this.multiplayerPanel.style.display = 'block';
-                this.connectionStatus.style.display = 'block';
-            }
-
-            closeMultiplayerPanel() {
-                this.gamePaused = false;
-                this.multiplayerPanel.style.display = 'none';
-                if (!this.isMultiplayerMode) {
-                    this.connectionStatus.style.display = 'none';
-                }
-            }
-
-            createRoom() {
-                this.playerName = this.playerNameInput.value.trim();
-                if (!this.playerName) {
-                    alert("请输入你的游戏名称");
-                    return;
-                }
-
-                this.roomId = this.generateRoomId();
-                this.isMultiplayerMode = true;
-                this.isHost = true;
-                this.clientPlayer.name = this.playerName;
-
-                // 模拟WebSocket连接（实际项目中需要真实的WebSocket服务器）
-                this.simulateMultiplayerConnection();
-
-                alert(`房间创建成功！房间ID: ${this.roomId}\n分享给你的朋友加入游戏`);
-                this.updateConnectionStatus('已连接 - 房主');
-                this.multiplayerPanel.style.display = 'none';
-                this.gamePaused = false;
-            }
-
-            joinRoom() {
-                this.playerName = this.playerNameInput.value.trim();
-                if (!this.playerName) {
-                    alert("请输入你的游戏名称");
-                    return;
-                }
-
-                const roomId = this.roomIdInput.value.trim();
-                if (!roomId) {
-                    alert("请输入房间ID");
-                    this.roomIdInput.style.display = 'block';
-                    return;
-                }
-
-                this.roomId = roomId;
-                this.isMultiplayerMode = true;
-                this.isHost = false;
-                this.clientPlayer.name = this.playerName;
-
-                // 模拟加入房间
-                this.simulateMultiplayerConnection();
-
-                alert(`正在加入房间: ${this.roomId}`);
-                this.updateConnectionStatus('已连接 - 玩家');
-                this.multiplayerPanel.style.display = 'none';
-                this.gamePaused = false;
-            }
-
-            simulateMultiplayerConnection() {
-                // 模拟多人连接（实际项目中需要真实的WebSocket实现）
-                console.log(`多人模式启动 - 房间ID: ${this.roomId}`);
-                
-                // 模拟添加其他玩家
-                if (this.isHost) {
-                    setTimeout(() => {
-                        this.addOtherPlayer({
-                            id: 'player_bot1',
-                            name: '电脑玩家1',
-                            pos: { x: 100, y: 450 },
-                            score: 0,
-                            lives: 7
-                        });
-                    }, 2000);
-                }
-            }
-
-            addOtherPlayer(playerData) {
-                this.otherPlayers[playerData.id] = playerData;
-                console.log(`玩家加入: ${playerData.name}`);
-            }
-
-            removeOtherPlayer(playerId) {
-                delete this.otherPlayers[playerId];
-                console.log(`玩家离开: ${playerId}`);
-            }
-
-            updateConnectionStatus(status) {
-                this.connectionStatus.textContent = status;
-                this.connectionStatus.className = status.includes('已连接') ? 'status-connected' : 'status-disconnected';
-            }
-
-            generateRoomId() {
-                return Math.random().toString(36).substring(2, 10).toUpperCase();
             }
 
             /* Enemy Methods ************************************************************************************* */
@@ -564,21 +297,6 @@
             }
 
             /* Game Draw Methods ************************************************************************************* */
-            drawOtherPlayers() {
-                if (!this.isMultiplayerMode) return;
-
-                // 绘制其他玩家
-                Object.values(this.otherPlayers).forEach(player => {
-                    this.ctx.fillStyle = 'blue';
-                    this.ctx.fillRect(player.pos.x, player.pos.y, this.playerSize, this.playerSize);
-                    
-                    // 显示玩家名称
-                    this.ctx.fillStyle = 'white';
-                    this.ctx.font = '12px Arial';
-                    this.ctx.fillText(player.name, player.pos.x, player.pos.y - 5);
-                });
-            }
-
             drawPlayer() {
                 if (!this.gameActive) return;
 
@@ -598,7 +316,7 @@
 
             drawInfoPanel() {
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                this.ctx.fillRect(0, 0, 150, 150);
+                this.ctx.fillRect(0, 0, 150, 120);
 
                 this.ctx.fillStyle = 'white';
                 this.ctx.font = '12px Arial';
@@ -609,12 +327,6 @@
 
                 this.ctx.fillStyle = this.invulnerable ? 'yellow' : 'white';
                 this.ctx.fillText(`无敌: ${this.invulnerable ? this.invulnerableTimer.toFixed(1) : '否'}`, 10, 100);
-
-                // 显示多人模式信息
-                if (this.isMultiplayerMode) {
-                    this.ctx.fillText(`房间: ${this.roomId}`, 10, 120);
-                    this.ctx.fillText(`在线: ${Object.keys(this.otherPlayers).length + 1}`, 10, 140);
-                }
 
                 this.ctx.font = '8px Arial';
             }
@@ -644,7 +356,6 @@
             }
 
             drawLaser() {
-                // 增强激光视觉效果
                 const laserWidth = 15;
                 const centerX = this.playerPos.x + this.playerSize / 2;
                 
@@ -674,19 +385,6 @@
                 }
             }
 
-            updateOtherPlayers(deltaTime) {
-                if (!this.isMultiplayerMode) return;
-
-                // 模拟其他玩家的移动（实际项目中应该从服务器接收数据）
-                Object.values(this.otherPlayers).forEach(player => {
-                    // 简单的AI移动模式
-                    if (Math.random() < 0.02) {
-                        player.pos.x += (Math.random() - 0.5) * 20;
-                        player.pos.x = Math.max(0, Math.min(400 - this.playerSize, player.pos.x));
-                    }
-                });
-            }
-
             updateEnemies(deltaTime) {
                 if (!this.gameActive) return;
 
@@ -694,27 +392,11 @@
                     const enemy = this.enemies[i];
                     const enemyRect = { x: enemy.x, y: enemy.y, width: this.enemySize, height: this.enemySize };
                     
-                    // 检查与当前玩家的碰撞
+                    // 检查与玩家的碰撞
                     const playerRect = { x: this.playerPos.x, y: this.playerPos.y, width: this.playerSize, height: this.playerSize };
                     if (!this.invulnerable && this.checkCollision(playerRect, enemyRect)) {
                         this.handlePlayerHit(i);
                         continue;
-                    }
-
-                    // 检查与其他玩家的碰撞（多人模式）
-                    if (this.isMultiplayerMode) {
-                        Object.values(this.otherPlayers).forEach(otherPlayer => {
-                            const otherPlayerRect = { 
-                                x: otherPlayer.pos.x, 
-                                y: otherPlayer.pos.y, 
-                                width: this.playerSize, 
-                                height: this.playerSize 
-                            };
-                            if (this.checkCollision(otherPlayerRect, enemyRect)) {
-                                // 处理其他玩家被击中（在真实多人游戏中需要同步到服务器）
-                                console.log(`${otherPlayer.name} 被敌人击中`);
-                            }
-                        });
                     }
 
                     enemy.y += this.enemySpeed;
@@ -807,7 +489,7 @@
                     const bulletRect = { x: bullet.x - ballSize, y: bullet.y - ballSize, width: ballSize * 2, height: ballSize * 2 };
 
                     if (!this.invulnerable && this.checkCollision(playerRect, bulletRect)) {
-                        this.handlePlayerHit(-1); // -1 表示被子弹击中
+                        this.handlePlayerHit(-1);
                         this.enemyBullets.splice(i, 1);
                     }
                 }
@@ -914,7 +596,7 @@
             /* Game Over and Char Level Methods ************************************************************************************* */
             gameOver() {
                 let leaderboardEntry = {
-                    name: this.isMultiplayerMode ? this.playerName : "单人玩家",
+                    name: "单人玩家",
                     score: this.score
                 };
 
@@ -947,13 +629,22 @@
             }
 
             /*Input and Loop Methods ************************************************************************************* */
-            handleIntroClick() {
-                if (!this.inIntro || this.introVideoStarted) {
-                    console.log("Intro click ignored: inIntro=" + this.inIntro + ", introVideoStarted=" + this.introVideoStarted);
+            handleIntroClick(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!this.inIntro) {
+                    console.log("Not in intro, ignoring click");
                     return;
                 }
+                
+                if (this.introVideoStarted) {
+                    console.log("Video already started, ignoring click");
+                    return;
+                }
+                
                 this.introVideoStarted = true;
-                console.log("handleIntroClick called");
+                console.log("handleIntroClick called - starting video");
 
                 const introTextH1 = this.introScreen.querySelector('h1');
                 const introTextP = this.introScreen.querySelector('p');
@@ -991,7 +682,6 @@
                 document.getElementById('fire-button').style.display = 'flex';
                 document.getElementById('pause-button').style.display = 'flex';
                 document.getElementById('show-leaderboard-button').style.display = 'flex';
-                document.getElementById('show-multiplayer-button').style.display = 'flex';
                 
                 this.init();
                 this.gameActive = true;
@@ -1050,12 +740,6 @@
                 } else {
                     this.ctx.fillStyle = 'black';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                }
-
-                // Check for multiplayer mode
-                if (this.isMultiplayerMode) {
-                    this.drawOtherPlayers();
-                    this.updateOtherPlayers(deltaTime);
                 }
 
                 this.drawPlayer();
@@ -1125,7 +809,7 @@
                             playerDirectionX = deltaX / maxDistance;
                             playerDirectionY = deltaY / maxDistance;
                             if (distance > maxDistance) {
-                                playerDirectionX = deltaX                                playerDirectionX = deltaX / distance;
+                                playerDirectionX = deltaX / distance;
                                 playerDirectionY = deltaY / distance;
                             }
                             joystickHandle.style.left = `${joystickBaseX + playerDirectionX * maxDistance - 25}px`;
@@ -1244,9 +928,9 @@
                     this.playerShootSound.currentTime = 0;
                     this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
                 } else {
-                    // 激光攻击 - 增强版本
+                    // 激光攻击
                     this.laserActive = true;
-                    this.laserTimer = 1.0; // 激光持续1秒
+                    this.laserTimer = 1.0;
                     this.playerShootSound.currentTime = 0;
                     this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
                 }
@@ -1269,7 +953,6 @@
                         
                         if (this.checkCollision(laserRect, enemyRect)) {
                             this.destroyEnemy(i, enemy);
-                            // 激光继续穿透，不break
                         }
                     }
 
@@ -1285,7 +968,6 @@
                         
                         if (this.checkCollision(laserRect, bulletRect)) {
                             this.enemyBullets.splice(i, 1);
-                            // 创建小爆炸效果
                             this.drawExplosion(bullet.x, bullet.y, 10);
                         }
                     }
