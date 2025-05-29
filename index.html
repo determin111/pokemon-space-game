@@ -333,7 +333,7 @@
     <div id="multiplayer-panel">
         <h2>多人联机模式</h2>
         <input type="text" id="player-name" placeholder="输入你的游戏名称">
-        <button id="create-room-btn">创建房间</button>
+        <butt        <button id="create-room-btn">创建房间</button>
         <button id="join-room-btn">加入房间</button>
         <input type="text" id="room-id" placeholder="输入房间ID" style="display:none;">
         <button id="start-game-btn" style="display:none;">开始游戏</button>
@@ -346,7 +346,7 @@
     <script>
         console.log("JavaScript file loaded and running");
         class PokemonSpaceGame {
-            constructor(isMultiplayerClient = false) {  // Add parameter for multiplayer client flag
+            constructor(isMultiplayerClient = false) { // Add parameter for multiplayer client flag
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
 
@@ -355,7 +355,7 @@
                     this.canvas = document.createElement('canvas');
                     this.canvas.width = 400;
                     this.canvas.height = 600;
-                    this.canvas.classList.add('other-player-canvas');  // Add styling class
+                    this.canvas.classList.add('other-player-canvas'); // Add styling class
                     document.body.appendChild(this.canvas); // Append to the body or another suitable element
                     this.ctx = this.canvas.getContext('2d');
                 }
@@ -546,7 +546,7 @@
                     };
                 }
 
-                this.startGame();  // Make sure to start the game!
+                this.startGame(); // Make sure to start the game!
             }
 
             fireEnemyShotgun(enemy) {
@@ -759,7 +759,8 @@
 
                     if (bullet.y > this.canvas.height || bullet.x < 0 || bullet.x > this.canvas.width) {
                         this.enemyBullets.splice(i, 1);
-                        continue;                    }
+                        continue;
+                    }
 
                     const ballSize = this.enemyBulletSize;
                     this.ctx.fillStyle = 'rgba(255, 77, 255, 0.3)';
@@ -878,6 +879,15 @@
                 this.gameActive = false;
                 this.gamePaused = false;
                 this.waitForRestart = false;
+                this.score = 0;
+                this.lives = 7;
+                this.level = 1;
+                this.nextLevelScore = 25;
+                this.invulnerable = false;
+                this.invulnerableTimer = 0;
+                this.characterLevel = 1;
+                this.maxCharacterLevel = 6;
+
                 this.playerPos = {
                     x: 160,
                     y: 450
@@ -885,107 +895,113 @@
                 this.bullets = [];
                 this.enemies = [];
                 this.enemyBullets = [];
-                this.score = 0;
-                this.lives = 7;
-                this.level = 1;
-                this.nextLevelScore = 25;
-                this.enemySpeed = 1.2;
-                this.enemyFireRate = 0.006;
-                this.maxEnemies = 4;
-                this.invulnerable = false;
-                this.invulnerableTimer = 0;
-                this.characterLevel = 1;
-                this.laserActive = false;
-                this.laserTimer = 0;
-
-                this.gameOverScreen.style.display = 'none';
-                this.leaderboardElement.style.display = 'none';
-
-                if (this.bgMusic) {
-                    this.bgMusic.pause();
-                    this.bgMusic.currentTime = 0;
-                }
-                console.log("Game initialized/reset.");
             }
+            laserCollisionDetection() {
+                if (!this.laserActive) return;
 
-            gameOver() {
-                let leaderboardEntry = {
-                    name: this.isMultiplayerMode ? this.playerName : "单人玩家",
-                    score: this.score
-                };
+                const laserX = this.playerPos.x + this.playerSize / 2; // Center of the player
+                const laserWidth = 10; // Width of the laser beam
 
-                 // Only add the score ONE time (otherwise, both instances add the same score!)
-                if (!this.isMultiplayerClient) {
-                    this.addScoreToLeaderboard(leaderboardEntry);
+                for (let i = this.enemies.length - 1; i >= 0; i--) {
+                    const enemy = this.enemies[i];
+
+                    // Check X position for collision; laser is a vertical line
+                    if (enemy.x < laserX + laserWidth / 2 && enemy.x + this.enemySize > laserX - laserWidth / 2) { // Collision detected!		
+                        this.enemies.splice(i, 1);
+                        this.score += 5;
+                        this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
+                        this.explosionSound.currentTime = 0;
+                        this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
+                    }
                 }
-
-                this.gameActive = false;
-                if (this.bgMusic) this.bgMusic.pause();
-                this.gameOverScreen.style.display = 'block';
-                this.finalScoreText.textContent = `最终分数: ${this.score}`;
-                this.waitForRestart = true;
-                console.log("Game Over. Waiting for restart.");
             }
 
             characterLevelUp() {
-                if (this.characterLevel < this.maxCharacterLevel) {
-                    this.characterLevel++;
-                    this.invulnerable = true;
-                    this.invulnerableTimer = 1;
-                    console.log(`角色升级到等级 ${this.characterLevel}!`);
-                    if (this.characterLevel === this.maxCharacterLevel) {
-                        console.log("角色达到最高等级! 攻击变为激光!");
-                        this.ctx.font = '20px Arial';
-                        this.ctx.fillStyle = 'aqua';
-                        this.ctx.textAlign = 'center';
-                        this.ctx.fillText(`攻击强化: 激光!`, this.canvas.width / 2, this.canvas.height / 2);
-                        this.ctx.textAlign = 'left';
-                    }
-                } else {
-                    console.log("角色已达到最高等级!");
+                if (this.characterLevel >= this.maxCharacterLevel) return;
+
+                this.characterLevel++;
+                this.shootSound.src = `sounds/shoot${this.characterLevel}.mp3`;
+                this.levelUpSound.currentTime = 0;
+                this.levelUpSound.play().catch(e => console.log("播放角色升级:", e));
+            }
+
+            spawnEnemies() {
+                if (this.enemies.length < this.maxEnemies && Math.random() < this.spawnRate && this.gameActive) {
+                    const x = Math.random() * (this.canvas.width - this.enemySize);
+                    this.enemies.push({
+                        x: x,
+                        y: -this.enemySize
+                    });
+                }
+            }
+
+            toggleLeaderboard() {
+                this.leaderboardElement.style.display = this.leaderboardElement.style.display === 'none' ? 'block' : 'none';
+
+                if (this.leaderboardElement.style.display === 'block' && !this.leaderboardLoaded) {
+                    this.loadAndDisplayLeaderboard();
+                    this.leaderboardLoaded = true;
+                }
+            }
+
+            loadAndDisplayLeaderboard() {
+                this.leaderboardData = this.loadLeaderboard(); // Make sure you get the latest data.
+                this.displayLeaderboard();
+            }
+
+            loadLeaderboard() {
+                const leaderboardString = localStorage.getItem('leaderboard');
+                return leaderboardString ? JSON.parse(leaderboardString) : [];
+            }
+
+            saveLeaderboard() {
+                localStorage.setItem('leaderboard', JSON.stringify(this.leaderboardData));
+            }
+
+            addScoreToLeaderboard(name, score) {
+                this.leaderboardData.push({
+                    name: name,
+                    score: score
+                });
+                this.leaderboardData.sort((a, b) => b.score - a.score);
+                this.leaderboardData = this.leaderboardData.slice(0, 10);
+                this.saveLeaderboard();
+            }
+
+            displayLeaderboard() {
+                this.leaderboardList.innerHTML = ''; // Clear old list
+
+                for (let i = 0; i < this.leaderboardData.length; i++) {
+                    const entry = this.leaderboardData[i];
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${entry.name} - ${entry.score}`;
+                    this.leaderboardList.appendChild(listItem);
                 }
             }
 
             handleIntroClick() {
-                if (!this.inIntro || this.introVideoStarted) {
-                    console.log("Intro click ignored: inIntro=" + this.inIntro + ", introVideoStarted=" + this.introVideoStarted);
-                    return;
+                console.log("Intro clicked");
+                if (!this.introVideoStarted) {
+                    this.introVideo.play();
+                    this.introVideoStarted = true;
+
+                    this.introVideo.addEventListener('ended', () => {
+                        this.startGame(); // Start after video
+                    }, {
+                        once: true
+                    }); // Ensures event only fires once
+                } else {
+                    this.startGame(); // Start immediately on second click
                 }
-                this.introVideoStarted = true;
-                console.log("handleIntroClick called");
-
-                const introTextH1 = this.introScreen.querySelector('h1');
-                const introTextP = this.introScreen.querySelector('p');
-                if (introTextH1) introTextH1.style.display = 'none';
-                if (introTextP) introTextP.style.display = 'none';
-
-                this.introVideo.muted = false;
-                this.introVideo.loop = false;
-                this.introVideo.currentTime = 0;
-
-                this.introVideo.play().then(() => {
-                    console.log("Intro video playing.");
-                    this.introVideo.onended = () => {
-                        console.log("Intro video ended.");
-                        this.proceedToGameStart();
-                    };
-                }).catch(e => {
-                    console.error("Error playing intro video:", e);
-                    this.proceedToGameStart();
-                });
             }
 
-            proceedToGameStart() {
-                if (!this.inIntro && this.gameActive) {
-                    console.log("proceedToGameStart called but game already active or not in intro phase.");
-                    return;
-                }
-                console.log("proceedToGameStart called");
+            startGame() {
+                console.log('startGame called');
 
-                this.inIntro = false;
                 this.introScreen.style.display = 'none';
+                this.gameOverScreen.style.display = 'none';
+                this.canvas.style.display = 'block'; // Show the canvas
 
-                this.canvas.style.display = 'block';
                 document.getElementById('joystick').style.display = 'flex';
                 document.getElementById('fire-button').style.display = 'flex';
                 document.getElementById('pause-button').style.display = 'flex';
@@ -994,145 +1010,142 @@
 
                 this.init();
                 this.gameActive = true;
-                this.lastTime = performance.now();
+                this.waitForRestart = false;
 
-                this.bgMusic.currentTime = 0;
-                this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+                if (this.isMultiplayerMode) {
+                    this.showMultiplayerPanel.style.display = "none";
+                    this.multiplayerPanel.style.display = "none";
+                    this.showLeaderboard.style.display = "none";
+                    this.leaderboard.style.display = "none";
 
-                requestAnimationFrame(this.gameLoop.bind(this));
-                console.log("Game has started after intro video.");
+                    if (this.isMultiplayerClient) {
+                        this.canvas.style.border = "2px solid blue";
+                    } else {
+                        this.canvas.style.border = "2px solid green";
+                    }
+                    this.ctx.fillText("Multiplayer enabled", 30, 20);
+                }
+                this.gameLoop();
             }
 
-            startGame() {
-                console.log("startGame function called (for restart)");
-                if (this.waitForRestart) {
-                    this.gameOverScreen.style.display = 'none';
-                    this.gameActive = true;
-                    this.lastTime = performance.now();
-
-                    this.bgMusic.currentTime = 0;
-                    this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-                    requestAnimationFrame(this.gameLoop.bind(this));
-                    this.waitForRestart = false;
-                    console.log("Game restarted.");
-                } else {
-                    console.log("startGame called but not in waitForRestart state.");
-                }
+            pauseGame() {
+                this.gamePaused = !this.gamePaused;
             }
 
-            gameLoop(timestamp) {
-                if (!this.gameActive) {
-                    if (this.waitForRestart) {}
-                    return;
-                }
-                const deltaTime = (timestamp - this.lastTime) || 0;
-                this.lastTime = timestamp;
+            gameOver() {
+                console.log('gameOver called');
 
-                if (this.gamePaused) {
-                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                    this.ctx.font = '30px Arial';
-                    this.ctx.fillStyle = 'white';
-                    this.ctx.textAlign = 'center';
-                    this.ctx.fillText('游戏暂停', this.canvas.width / 2, this.canvas.height / 2);
-                    this.ctx.textAlign = 'left';
-                    requestAnimationFrame(this.gameLoop.bind(this));
-                    return;
-                }
+                if (!this.gameActive) return;
 
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                if (this.bgLoaded) {
-                    this.ctx.drawImage(this.bgImage, 0, 0, 400, 600);
-                } else {
-                    this.ctx.fillStyle = 'black';
-                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                }
+                this.finalScoreText.textContent = `最终分数: ${this.score}`;
+                this.canvas.style.display = 'none';
 
-                if (this.isMultiplayerMode && !this.isMultiplayerClient) {
-                    this.drawOtherPlayers();
-                   // this.updateOtherPlayers(deltaTime);
+                document.getElementById('joystick').style.display = 'none';
+                document.getElementById('fire-button').style.display = 'none';
+                document.getElementById('pause-button').style.display = 'none';
+                document.getElementById('show-leaderboard-button').style.display = 'none';
+                document.getElementById('show-multiplayer-button').style.display = 'none';
 
-                    // THIS instance moves the otherPlayer instance, based on ITS movement updates.
-                    this.updateEnemies(deltaTime, this.otherGameInstance.enemies);
 
-                    // THIS instance also does collision detection FOR  the other instance, in ITS set of enemies.
-                    this.updateEnemyBullets(this.otherGameInstance.enemies);
-                }
+                this.gameOverScreen.style.display = 'flex';
+                this.addScoreToLeaderboard(this.playerName || '游客', this.score);
+                this.loadAndDisplayLeaderboard();
 
-                this.drawPlayer();
-                this.updateBullets();
-                this.updateEnemies(deltaTime, this.enemies);
-                this.updateEnemyBullets();
-                this.updateLaser(deltaTime);
-                this.drawInfoPanel();
-                this.updatePlayerPosition();
-
-                if (this.gameActive && Math.random() < this.spawnRate && this.enemies.length < this.maxEnemies) {
-                    this.enemies.push({
-                        x: Math.random() * (this.canvas.width - this.enemySize),
-                        y: -this.enemySize
-                    });
-                }
-
-                if (this.score >= this.nextLevelScore) {
-                    this.levelUp();
-                    this.nextLevelScore = this.nextLevelScore * 2;
-                }
-
-                requestAnimationFrame(this.gameLoop.bind(this));
+                this.gameActive = false;
+                this.waitForRestart = true;
             }
 
-            handleRestart(e) {
-                if (this.waitForRestart) {
-                    e.preventDefault();
-                    this.init();
-                    this.startGame();
-                }
+            setupKeyboardControls() {
+                document.addEventListener('keydown', (e) => {
+                    if (this.waitForRestart) {
+                        this.startGame();
+                        return;
+                    }
+
+                    if (e.key === 'Escape' || e.key === 'P' || e.key === 'p') {
+                        this.pauseGame();
+                        return;
+                    }
+
+                    if (!this.gameActive || this.gamePaused) return;  // Only respond during gameplay
+
+                    switch (e.key) {
+                        case 'ArrowLeft':
+                        case 'a':
+                            this.playerPos.x -= this.playerSpeed;
+                            break;
+                        case 'ArrowRight':
+                        case 'd':
+                            this.playerPos.x += this.playerSpeed;
+                            break;
+
+                        case ' ':
+                            if (this.characterLevel < this.maxCharacterLevel) {
+                                this.bullets.push({
+                                    x: this.playerPos.x + this.playerSize / 2,
+                                    y: this.playerPos.y
+                                });
+                                this.shootSound.currentTime = 0;
+                                this.shootSound.play().catch(e => console.log("播放音效失败:", e));
+                            } else {
+                                if (!this.laserActive) {
+                                    this.laserActive = true;
+                                    this.laserTimer = 4; // laser active for 4 seconds
+                                    this.shootSound.currentTime = 0;
+                                    this.shootSound.play().catch(e => console.log("播放音效失败:", e));
+                                }
+                            }
+
+                            break;
+                    }
+
+                    this.playerPos.x = Math.max(0, Math.min(this.canvas.width - this.playerSize, this.playerPos.x));
+                });
+
+                document.addEventListener('mousedown', () => {
+                    if (this.waitForRestart) {
+                        this.startGame();
+                    }
+                });
             }
 
-           setupTouchControls() {
+            setupTouchControls() {
                 const joystick = document.getElementById('joystick');
                 const joystickHandle = document.getElementById('joystick-handle');
                 const fireButton = document.getElementById('fire-button');
-                const pauseButton = document.getElementById('pause-button');
+
                 let joystickBaseX, joystickBaseY;
-                let joystickTouchId = null; // 用于跟踪触摸ID
-                let playerDirectionX = 0,
-                    playerDirectionY = 0; // 玩家移动方向
+                let joystickActive = false;
+                let currentTouchId = null; // Track active touch
 
                 joystick.addEventListener('touchstart', (e) => {
+                    if (!this.gameActive || this.gamePaused) return;
+
                     e.preventDefault();
-                    if (joystickTouchId === null && e.touches[0]) { // 只处理第一个触摸
-                        joystickTouchId = e.touches[0].identifier;
-                        joystickBaseX = e.touches[0].clientX - joystick.getBoundingClientRect().left;
-                        joystickBaseY = e.touches[0].clientY - joystick.getBoundingClientRect().top;
-                        // 调整手柄位置
-                        joystickHandle.style.left = `${joystickBaseX - 25}px`; // 使手柄居中
-                        joystickHandle.style.top = `${joystickBaseY - 25}px`; // 使手柄居中
+
+                    if (currentTouchId === null) {
+                        joystickActive = true;
+                        currentTouchId = e.changedTouches[0].identifier;
+
+                        joystickBaseX = e.changedTouches[0].clientX - joystick.offsetLeft;
+                        joystickBaseY = e.changedTouches[0].clientY - joystick.offsetTop;
+
+                        joystickHandle.style.transition = 'none'; // Disable transition
+                        this.updateJoystickHandlePosition(e.changedTouches[0]);
                     }
                 }, {
                     passive: false
                 });
 
                 joystick.addEventListener('touchmove', (e) => {
+                    if (!joystickActive || !this.gameActive || this.gamePaused) return;
+
                     e.preventDefault();
-                    if (joystickTouchId !== null) {
-                        const touch = Array.from(e.touches).find(t => t.identifier === joystickTouchId);
-                        if (touch) {
-                            const touchX = touch.clientX - joystick.getBoundingClientRect().left;
-                            const touchY = touch.clientY - joystick.getBoundingClientRect().top;
-                            const deltaX = touchX - joystickBaseX;
-                            const deltaY = touchY - joystickBaseY;
-                            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                            const maxDistance = joystick.offsetWidth / 2;
-                            playerDirectionX = deltaX / maxDistance;
-                            playerDirectionY = deltaY / maxDistance;
-                            if (distance > maxDistance) {
-                                playerDirectionX = deltaX / distance;
-                                playerDirectionY = deltaY / distance;
-                            }
-                            joystickHandle.style.left = `${joystickBaseX + playerDirectionX * maxDistance - 25}px`;
-                            joystickHandle.style.top = `${joystickBaseY + playerDirectionY * maxDistance - 25}px`;
+
+                    for (let i = 0; i < e.changedTouches.length; i++) {
+                        if (e.changedTouches[i].identifier === currentTouchId) {
+                            this.updateJoystickHandlePosition(e.changedTouches[i]);
+                            break;
                         }
                     }
                 }, {
@@ -1140,232 +1153,128 @@
                 });
 
                 const resetJoystick = () => {
-                    joystickTouchId = null;
-                    playerDirectionX = 0;
-                    playerDirectionY = 0;
-                    joystickHandle.style.left = `${joystick.offsetWidth / 2 - joystickHandle.offsetWidth / 2}px`;
-                    joystickHandle.style.top = `${joystick.offsetHeight / 2 - joystickHandle.offsetHeight / 2}px`;
+                    joystickActive = false;
+                    currentTouchId = null;
+
+                    joystickHandle.style.transition = 'transform 0.2s ease'; // Enable transition
+                    joystickHandle.style.transform = 'translate(-50%, -50%)';
                 };
 
-                joystick.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    const relevantTouch = Array.from(e.changedTouches).find(t => t.identifier === joystickTouchId);
-                    if (relevantTouch) {
-                        resetJoystick();
+                document.addEventListener('touchend', (e) => {
+                    for (let i = 0; i < e.changedTouches.length; i++) {
+                        if (e.changedTouches[i].identifier === currentTouchId) {
+                            resetJoystick();
+                            break;
+                        }
                     }
-                }, {
-                    passive: false
                 });
 
-                joystick.addEventListener('touchcancel', (e) => {
-                    e.preventDefault();
-                    const relevantTouch = Array.from(e.changedTouches).find(t => t.identifier === joystickTouchId);
-                    if (relevantTouch) {
-                        resetJoystick();
+                document.addEventListener('touchcancel', (e) => {
+                    for (let i = 0; i < e.changedTouches.length; i++) {
+                        if (e.changedTouches[i].identifier === currentTouchId) {
+                            resetJoystick();
+                            break;
+                        }
                     }
-                }, {
-                    passive: false
                 });
+
+                this.updateJoystickHandlePosition = (touch) => {
+                    const deltaX = touch.clientX - joystick.offsetLeft - joystickBaseX;
+                    const deltaY = touch.clientY - joystick.offsetTop - joystickBaseY;
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+                    let clampedX = deltaX;
+                    let clampedY = deltaY;
+
+                    if (distance > 50) {
+                        clampedX = deltaX * (50 / distance);
+                        clampedY = deltaY * (50 / distance);
+                    }
+
+                    joystickHandle.style.transform = `translate(calc(-50% + ${clampedX}px), calc(-50% + ${clampedY}px))`;
+
+                    // Move player horizontally based on touch
+                    this.playerPos.x += deltaX / 15;
+                    this.playerPos.x = Math.max(0, Math.min(this.canvas.width - this.playerSize, this.playerPos.x));
+                };
 
                 fireButton.addEventListener('touchstart', (e) => {
                     e.preventDefault();
-                    this.fireBullet();
-                });
+                    if (!this.gameActive || this.gamePaused) return;
 
-                pauseButton.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    this.gamePaused = !this.gamePaused;
-                    if (this.gamePaused) {
-                        if (this.bgMusic) this.bgMusic.pause();
+                    if (this.characterLevel < this.maxCharacterLevel) {
+                        this.bullets.push({
+                            x: this.playerPos.x + this.playerSize / 2,
+                            y: this.playerPos.y
+                        });
+                        this.shootSound.currentTime = 0;
+                        this.shootSound.play().catch(e => console.log("播放音效失败:", e));
                     } else {
-                        if (this.bgMusic) this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+                        if (!this.laserActive) {
+                            this.laserActive = true;
+                            this.laserTimer = 4; // laser active for 4 seconds
+                            this.shootSound.currentTime = 0;
+                            this.shootSound.play().catch(e => console.log("播放音效失败:", e));
+                        }
                     }
+                }, {
+                    passive: false
                 });
-
-                this.updatePlayerPosition = () => {
-                    const speed = 5; // 调整速度
-                    this.playerPos.x += playerDirectionX * speed;
-                    this.playerPos.y += playerDirectionY * speed;
-                    this.playerPos.x = Math.max(0, Math.min(this.playerPos.x, 400 - this.playerSize));
-                    this.playerPos.y = Math.max(0, Math.min(this.playerPos.y, 600 - this.playerSize * 1.2));
-                };
-            }
-
-            setupKeyboardControls() {
-                document.addEventListener('keydown', (e) => {
-                    if (this.waitForRestart) {
-                        return;
-                    }
-                    if (this.gamePaused && e.key !== 'p' && e.key !== 'P') {
-                        return;
-                    }
-
-                    let moveSpeed = 15;
-                    switch (e.key) {
-                        case 'ArrowLeft':
-                        case 'a':
-                        case 'A':
-                            this.playerPos.x = Math.max(0, this.playerPos.x - moveSpeed);
-                            break;
-                        case 'ArrowRight':
-                        case 'd':
-                        case 'D':
-                            this.playerPos.x = Math.min(400 - this.playerSize, this.playerPos.x + moveSpeed);
-                            break;
-                        case 'ArrowUp':
-                        case 'w':
-                        case 'W':
-                            this.playerPos.y = Math.max(0, this.playerPos.y - moveSpeed);
-                            break;
-                        case 'ArrowDown':
-                        case 's':
-                        case 'S':
-                            this.playerPos.y = Math.min(600 - this.playerSize * 1.2, this.playerPos.y + moveSpeed);
-                            break;
-                        case ' ':
-                            this.fireBullet();
-                            break;
-                        case 'p':
-                        case 'P':
-                            this.gamePaused = !this.gamePaused;
-                            if (this.gamePaused) {
-                                if (this.bgMusic) this.bgMusic.pause();
-                            } else {
-                                if (this.bgMusic) this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-                            }
-                            break;
-                    }
-                });
-
-                document.addEventListener('keydown', this.handleRestart.bind(this));
-                document.addEventListener('mousedown', this.handleRestart.bind(this));
-                document.addEventListener('touchstart', this.handleRestart.bind(this));
-            }
-
-            fireBullet() {
-                if (this.characterLevel < this.maxCharacterLevel) {
-                    this.bullets.push({
-                        x: this.playerPos.x + this.playerSize / 2,
-                        y: this.playerPos.y
-                    });
-                    this.playerShootSound.currentTime = 0;
-                    this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
-                } else {
-                    this.laserActive = true;
-                    this.laserTimer = 0.5;
-                    this.playerShootSound.currentTime = 0;
-                    this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
-                }
-            }
-
-    laserCollisionDetection(enemies = this.enemies, gameInstance = this) {
-        // Only perform laser collision detection if the laser is active AND the game is active!
-        if (this.laserActive && this.gameActive) { // Ensure both conditions are met!
-            const laserWidth = 10;
-            const laserRect = {
-                x: this.playerPos.x + this.playerSize / 2 - laserWidth / 2,
-                y: 0,
-                width: laserWidth,
-                height: this.playerPos.y  // Extends to the top of the canvas
-            };
-
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                const enemy = enemies[i];
-                const enemyRect = {
-                    x: enemy.x,
-                    y: enemy.y,
-                    width: this.enemySize,
-                    height: this.enemySize
-                };
-
-                // Use the checkCollision function to precisely detect laser-enemy overlap
-                if (this.checkCollision(laserRect, enemyRect)) {
-                    // Collision detected!  Apply damage / handle the hit.
-
-                    // *** IMPORTANT: Enemy is hit! You must handle the consequences here! ***
-                    // Remove the enemy, increase score, create explosion, play sound...
-                    enemies.splice(i, 1);  // Remove the enemy from the array!
-                    this.score += 5;           // Increase the player's score.
-                    this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);  // Add visual effect.
-                    this.explosionSound.currentTime = 0;  // Reset audio
-                    this.explosionSound.play().catch(e => console.log("播放音效失败:", e)); // Play explosion sound
-
-                    // **BREAK** Very important: After a collision, stop checking other enemies!
-                    //                  Laser *cannot* hit multiple enemies in the same frame unless multi-collision is desired.
-                    break; // Prevent double hits because the laser remains active during the fraem!
-                }
-            }
-        }
-    }
-
-            toggleLeaderboard() {
-                this.leaderboardElement.style.display =
-                    this.leaderboardElement.style.display === 'none' ? 'block' : 'none';
-                if (this.leaderboardElement.style.display === 'block') {
-                    this.updateLeaderboardDisplay();
-                }
             }
 
             loadImages() {
-                this.bgImage = new Image();
-                this.bgImage.src = 'images/earth_view.jpg';
-                this.bgImage.onload = () => this.bgLoaded = true;
-
                 this.playerImage = new Image();
-                this.playerImage.src = 'images/rayquaza.png';
-                this.playerImage.onload = () => this.playerLoaded = true;
+                this.playerImage.src = 'images/player.png';// 替换为你的玩家图片路径
+                this.playerImage.onload = () => {
+                    this.playerLoaded = true;
+                };
 
                 this.enemyImage = new Image();
-                this.enemyImage.src = 'images/deoxys.png';
-                this.enemyImage.onload = () => this.enemyLoaded = true;
+                this.enemyImage.src = 'images/enemy.png';
+                this.enemyImage.onload = () => {
+                    this.enemyLoaded = true;
+                };
             }
 
             loadSounds() {
-                this.bgMusic = new Audio('sounds/background_music.mp3');
-                this.bgMusic.loop = true;
-                this.playerShootSound = new Audio('sounds/player_shoot.mp3');
-                this.enemyShootSound = new Audio('sounds/enemy_shoot.mp3');
+                this.shootSound = new Audio('sounds/shoot1.mp3');
                 this.explosionSound = new Audio('sounds/explosion.mp3');
                 this.levelUpSound = new Audio('sounds/level_up.mp3');
+                this.enemyShootSound = new Audio('sounds/enemy_shoot.mp3');
             }
-
-            loadLeaderboard() {
-                const data = localStorage.getItem('pokemonSpaceGameLeaderboard');
-                return data ? JSON.parse(data) : [];
-            }
-
-            saveLeaderboard() {
-                localStorage.setItem('pokemonSpaceGameLeaderboard', JSON.stringify(this.leaderboardData));
-            }
-
-            addScoreToLeaderboard(scoreEntry) {
-                this.leaderboardData.push(scoreEntry);
-                this.leaderboardData.sort((a, b) => b.score - a.score);
-                this.leaderboardData = this.leaderboardData.slice(0, 10);
-                this.saveLeaderboard();
-                this.updateLeaderboardDisplay();
-            }
-
-            updateLeaderboardDisplay() {
-                this.leaderboardList.innerHTML = '';
-                if (this.leaderboardData.length === 0) {
-                    const li = document.createElement('li');
-                    li.textContent = '暂无记录';
-                    this.leaderboardList.appendChild(li);
-                } else {
-                    this.leaderboardData.forEach((entry, index) => {
-                        const li = document.createElement('li');
-                        li.textContent = `第 ${index + 1} 名: ${entry.name} - ${entry.score} 分`;
-                        this.leaderboardList.appendChild(li);
-                    });
+            gameLoop(timestamp) {
+                if (!this.gameActive) return;
+                if (this.gamePaused) {
+                    requestAnimationFrame(this.gameLoop.bind(this));
+                    return;
                 }
-            }
+                let deltaTime = timestamp - this.lastTime;
+                this.lastTime = timestamp;
 
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.updateLaser(deltaTime);
+                this.updateBullets();
+                this.updateEnemies(deltaTime);
+
+                this.updateEnemyBullets();
+
+                this.spawnEnemies();
+                this.drawPlayer();
+                this.drawOtherPlayers();
+
+                this.drawInfoPanel();
+
+                if (this.score >= this.nextLevelScore) {
+                    this.levelUp();
+                    this.nextLevelScore *= 2;
+                }
+
+                requestAnimationFrame(this.gameLoop.bind(this));
+            }
         }
 
-        window.onload = function() {
-            new PokemonSpaceGame();
-        };
+        let game = new PokemonSpaceGame();
     </script>
 </body>
 
