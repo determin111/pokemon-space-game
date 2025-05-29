@@ -26,7 +26,26 @@
             border: 1px solid #333;
             max-width: 100%;
             max-height: 100%;
+            display: none;
         }
+
+        #intro-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black; /* Or your desired intro background */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            text-align: center;
+            z-index: 1000; /* Ensure intro is on top */
+        }
+
         .game-over {
             position: absolute;
             color: white;
@@ -53,6 +72,7 @@
             display: flex;
             justify-content: center; /* 水平居中 */
             align-items: center;    /* 垂直居中 */
+            display: none; /* Hide during intro */
         }
 
         #joystick-handle {
@@ -77,6 +97,7 @@
             color: white;
             font-size: 24px;
             user-select: none; /* 禁止文本选择 */
+            display: none; /* Hide during intro */
         }
 
         #pause-button {
@@ -93,6 +114,7 @@
             color: white;
             font-size: 18px;
             user-select: none; /* 禁止文本选择 */
+            display: none; /* Hide during intro */
         }
 
         /* 排行榜样式 */
@@ -137,6 +159,7 @@
             font-size: 14px;
             user-select: none;
             cursor: pointer;
+            display: none; /* Hide during intro */
         }
 
         /* Multiplayer Panel Styles */
@@ -217,10 +240,15 @@
             font-size: 14px;
             user-select: none;
             cursor: pointer;
+            display: none; /* Hide during intro */
         }
     </style>
 </head>
 <body>
+    <div id="intro-screen">
+        <h1>宝可梦太空对战</h1>
+        <p>点击或触摸屏幕开始</p>
+    </div>
     <canvas id="gameCanvas" width="400" height="600"></canvas>
     <div class="game-over" id="gameOverScreen">
         <h1>游戏结束</h1>
@@ -271,6 +299,7 @@
                 this.ctx = this.canvas.getContext('2d');
                 this.gameOverScreen = document.getElementById('gameOverScreen');
                 this.finalScoreText = document.getElementById('finalScore');
+                 this.introScreen = document.getElementById('intro-screen');
 
                 // Leaderboard elements
                 this.leaderboardElement = document.getElementById('leaderboard');
@@ -289,7 +318,7 @@
                 this.closePanelBtn = document.getElementById('close-panel-btn');
 
                 // Game state
-                this.gameActive = true;
+                this.gameActive = false;
                 this.gamePaused = false;
                 this.waitForRestart = false;
                 this.score = 0;
@@ -301,6 +330,7 @@
                 this.characterLevel = 1;  // Player character level (for upgrades)
                 this.maxCharacterLevel = 6; // Max level for the character
                 this.playerName = "";
+                this.inIntro = true; // Add this line
 
                 // Multiplayer Variables
                 this.isMultiplayerMode = false;
@@ -342,19 +372,19 @@
                 this.setupTouchControls();
 
                 // Event listeners
-                document.addEventListener('mousedown', this.handleRestart.bind(this));
-                document.addEventListener('touchstart', this.handleRestart.bind(this));
+                document.addEventListener('mousedown', this.startGame.bind(this)); // Modify this line
+                document.addEventListener('touchstart', this.startGame.bind(this)); // Modify this line
                 this.showLeaderboardButton.addEventListener('click', this.toggleLeaderboard.bind(this));
                 this.showMultiplayerButton.addEventListener('click', this.showMultiplayerPanel.bind(this));
                 this.createRoomBtn.addEventListener('click', this.createRoom.bind(this));
                 this.joinRoomBtn.addEventListener('click', this.joinRoom.bind(this));
                 this.closePanelBtn.addEventListener('click', this.closeMultiplayerPanel.bind(this));
                 this.addBasePlayer(this.playerName);
+
                 // Start the game loop
                 this.lastTime = 0;
-                this.init();
-                requestAnimationFrame(this.gameLoop.bind(this));
-
+                this.init(); // call it first since init needs enemy array to be initialized
+                requestAnimationFrame(this.introLoop.bind(this)); // Start with introLoop
             }
 
             // Create client player for multiplayering
@@ -450,6 +480,8 @@
             }
 
             drawPlayer() {
+                 if (!this.gameActive) return; // Don't draw if the game is not active
+
                 if (this.playerLoaded) {
                     //  Flicker the player image if invulnerable
                     if (this.invulnerable && Math.floor(Date.now() / 100) % 2) { // Blink effect
@@ -536,7 +568,9 @@
 
             }
 
-            updateEnemies(deltaTime) {
+             updateEnemies(deltaTime) {
+                if (!this.gameActive) return; // Don't update enemies if the game isn't active
+
                 for (let i = this.enemies.length - 1; i >= 0; i--) {
                     const enemy = this.enemies[i];
                     const enemyRect = { x: enemy.x, y: enemy.y, width: this.enemySize, height: this.enemySize };
@@ -719,13 +753,13 @@
                 return rect1.x < rect2.x + rect2.width &&
                        rect1.x + rect1.width > rect2.x &&
                        rect1.y < rect2.y + rect2.height &&
-                       rect1.y + rect1.height > rect2.y;
+                       rect1.y + rect2.height > rect2.y;
             }
 
               init() {
                 this.spawnRate = 0.012;
                 // 重置游戏状态
-                this.gameActive = true;
+                this.gameActive = false;
                 this.gamePaused = false;
                 this.waitForRestart = false;
                 this.playerPos = {x: 160, y: 450};
@@ -754,13 +788,7 @@
                 // 开始背景音乐
                 this.bgMusic.currentTime = 0;
                 this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-
-                // 开始游戏循环
-                requestAnimationFrame(this.gameLoop.bind(this));
-            }
-
-
-            /* Game Over and Char Level Methods ************************************************************************************* */
+            }****************** */
             gameOver() {
                // Store score within Player Information
                let leaderboardEntry = {
@@ -796,6 +824,46 @@
             }
 
             /*Input and Loop Methods ************************************************************************************* */
+             startGame() {
+                if (this.inIntro) {
+                    this.inIntro = false;
+                    this.introScreen.style.display = 'none';
+                    this.canvas.style.display = 'block';
+                    document.getElementById('joystick').style.display = 'flex';
+                    document.getElementById('fire-button').style.display = 'flex';
+                    document.getElementById('pause-button').style.display = 'flex';
+                    document.getElementById('show-leaderboard-button').style.display = 'flex';
+                    document.getElementById('show-multiplayer-button').style.display = 'flex';
+
+                    this.gameActive = true;
+                    this.lastTime = performance.now(); // Reset lastTime
+                    requestAnimationFrame(this.gameLoop.bind(this));
+                         this.bgMusic.currentTime = 0; // Reset bgMusic
+                        this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+                } else  if (this.waitForRestart) {
+                     this.bgMusic.currentTime = 0;
+                    this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+                    requestAnimationFrame(this.gameLoop.bind(this));
+
+                 }
+            }
+
+            introLoop(timestamp) {
+                if (!this.inIntro) return;
+
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.fillStyle = 'black';  // Or your desired background color
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = '2em Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('宝可梦太空对战', this.canvas.width / 2, this.canvas.height / 2);
+                this.ctx.font = '1.2em Arial';
+                this.ctx.fillText('点击或触摸屏幕开始', this.canvas.width / 2, this.canvas.height / 2 + 50);
+                requestAnimationFrame(this.introLoop.bind(this));
+            }
+
+
             gameLoop(timestamp) {
                 if (!this.gameActive) return;
                 const deltaTime = (timestamp - this.lastTime) || 0; // Handle first frame
@@ -837,6 +905,15 @@
                 // Update player position from joystick
                 this.updatePlayerPosition();
 
+                 //【重要】只有当游戏开始时才生成敌人
+                if (this.gameActive && Math.random() < this.spawnRate && this.enemies.length < this.maxEnemies) {
+                    this.enemies.push({
+                        x: Math.random() * (this.canvas.width - this.enemySize),
+                        y: -this.enemySize
+                    });
+                }
+
+
                 if (this.score >= this.nextLevelScore) {
                     this.levelUp();
                     this.nextLevelScore = this.nextLevelScore * 2;
@@ -849,6 +926,7 @@
                 if (this.waitForRestart) {
                     e.preventDefault(); // 阻止默认行为
                     this.init(); // 重新初始化游戏
+                    this.startGame();
                 }
             }
 
@@ -893,7 +971,7 @@
                             const deltaX = touchX - joystickBaseX;
                             const deltaY = touchY - joystickBaseY;
 
-                            // 计算触摸点距离中心点的距离
+                            // 计算触摸点距离摇杆中心点的距离
                             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
                             const maxDistance = joystick.offsetWidth / 2;                // 计算方向，归一化向量
                             playerDirectionX = deltaX / maxDistance;
@@ -958,11 +1036,13 @@
                         this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
                     }
                 });
+
                 // 更新玩家移动
                 this.updatePlayerPosition = () => {
                     const speed = 5; // 调整速度
                     this.playerPos.x += playerDirectionX * speed;
                     this.playerPos.y += playerDirectionY * speed;
+
                     // 边界检查
                     this.playerPos.x = Math.max(0, Math.min(this.playerPos.x, 400 - this.playerSize));
                     this.playerPos.y = Math.max(0, Math.min(this.playerPos.y, 600 - this.playerSize * 1.2));
@@ -1123,3 +1203,6 @@
     </script>
 </body>
 </html>
+
+
+            /* Game Over and Char Level Methods *******************************************************************
