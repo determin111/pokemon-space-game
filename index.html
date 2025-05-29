@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>宝可梦太空对战</title>
     <style>
-        /*  之前定义的css样式  */
+        /* 之前定义的css样式 */
         html, body {
             margin: 0;
             padding: 0;
@@ -820,11 +820,6 @@
                     this.ctx.fillStyle = 'black';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 }
-// Generate new enemies (with the maximum limit check)
-                if (Math.random() < this.spawnRate && this.enemies.length < this.maxEnemies) {
-                    const x = Math.random() * (400 - this.enemySize);
-                    this.enemies.push({ x: x, y: 0 });
-                }
 
                  // Check for multiplayer mode
                 if (this.isMultiplayerMode) {
@@ -839,6 +834,8 @@
                 this.drawInfoPanel();
                 //【新增】更新激光状态
                 this.updateLaser(deltaTime);
+                // Update player position from joystick
+                this.updatePlayerPosition();
 
                 if (this.score >= this.nextLevelScore) {
                     this.levelUp();
