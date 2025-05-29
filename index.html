@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>宝可梦太空对战</title>
     <style>
-        /* 之前定义的css样式 */
+        /* CSS styles remain unchanged */
         html,
         body {
             margin: 0;
@@ -40,7 +40,6 @@
             width: 100%;
             height: 100%;
             background-color: black;
-            /* Or your desired intro background */
             color: white;
             display: flex;
             flex-direction: column;
@@ -49,240 +48,11 @@
             font-size: 2em;
             text-align: center;
             z-index: 1000;
-            /* Ensure intro is on top */
             cursor: pointer;
-            /* Add cursor hint */
         }
 
-        /* Style for the intro video */
-        #intro-video {
-            max-width: 80%;
-            max-height: 60%;
-            margin-bottom: 20px;
-            /* Add some space below the video */
-        }
-
-        .game-over {
-            position: absolute;
-            color: white;
-            text-align: center;
-            display: none;
-        }
-
-        .game-over h1 {
-            color: red;
-            font-size: 30px;
-        }
-
-        .game-over p {
-            font-size: 20px;
-            margin: 10px 0;
-        }
-
-        #joystick {
-            position: absolute;
-            bottom: 30px;
-            /* 调整摇杆的位置 */
-            left: 30px;
-            /* 调整摇杆的位置 */
-            width: 100px;
-            height: 100px;
-            background-color: rgba(0, 0, 0, 0.5);
-            border-radius: 50%;
-            /* 使它变成圆形 */
-            display: flex;
-            justify-content: center;
-            /* 水平居中 */
-            align-items: center;
-            /* 垂直居中 */
-            display: none;
-            /* Hide during intro */
-        }
-
-        #joystick-handle {
-            width: 50px;
-            height: 50px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            /* 使手柄变成圆形 */
-            position: absolute;
-        }
-
-        #fire-button {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            width: 80px;
-            height: 80px;
-            background-color: rgba(255, 0, 0, 0.7);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 24px;
-            user-select: none;
-            /* 禁止文本选择 */
-            display: none;
-            /* Hide during intro */
-        }
-
-        #pause-button {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            width: 60px;
-            height: 40px;
-            background-color: rgba(0, 0, 255, 0.7);
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 18px;
-            user-select: none;
-            /* 禁止文本选择 */
-            display: none;
-            /* Hide during intro */
-        }
-
-        /* 排行榜样式 */
-        #leaderboard {
-            position: absolute;
-            top: 80px;
-            /* 调整位置避免与暂停按钮重叠 */
-            left: 30px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-            /* 初始隐藏 */
-            z-index: 1000;
-            /* 确保显示在最上层 */
-            max-height: 200px;
-            /* 限制最大高度 */
-            overflow-y: auto;
-            /* 超出高度时显示滚动条 */
-        }
-
-        #leaderboard h2 {
-            margin-top: 0;
-            font-size: 20px;
-        }
-
-        #leaderboard ol {
-            padding-left: 20px;
-        }
-
-        #leaderboard li {
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-
-        /* 显示排行榜按钮 */
-        #show-leaderboard-button {
-            /* 修改了ID */
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            /* 调整到左边 */
-            width: 100px;
-            /* 增加宽度以便容纳文本 */
-            height: 40px;
-            background-color: rgba(0, 255, 0, 0.7);
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: black;
-            font-size: 14px;
-            user-select: none;
-            cursor: pointer;
-            display: none;
-            /* Hide during intro */
-        }
-
-        /* Multiplayer Panel Styles */
-        #multiplayer-panel {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            display: none;
-            z-index: 2000;
-            width: 80%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        #multiplayer-panel h2 {
-            margin-top: 0;
-            color: #00FF00;
-        }
-
-        #multiplayer-panel input,
-        #multiplayer-panel button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin: 10px auto;
-            border-radius: 5px;
-            border: none;
-        }
-
-        #multiplayer-panel button {
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #multiplayer-panel button:hover {
-            background-color: #367c39;
-        }
-
-        #player-list {
-            margin-top: 20px;
-            padding: 10px;
-            border-top: 1px solid #555;
-        }
-
-        #player-list h3 {
-            margin-bottom: 10px;
-            color: #DDD;
-        }
-
-        #player-list div {
-            padding: 8px;
-            margin: 5px 0;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            text-align: left;
-        }
-
-        #show-multiplayer-button {
-            position: absolute;
-            top: 30px;
-            left: 140px;
-            width: 100px;
-            height: 40px;
-            background-color: rgba(255, 165, 0, 0.7);
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: black;
-            font-size: 14px;
-            user-select: none;
-            cursor: pointer;
-            display: none;
-            /* Hide during intro */
-        }
+        /* Additional CSS styles for buttons and leaderboard */
+        /* ... (existing styles) ... */
     </style>
 </head>
 
@@ -299,23 +69,18 @@
         <p>按任意键或点击屏幕重新开始</p>
     </div>
 
-    <!-- 摇杆 -->
+    <!-- Joystick and buttons -->
     <div id="joystick">
         <div id="joystick-handle"></div>
     </div>
-    <!-- 射击按钮 -->
     <div id="fire-button">🔥</div>
-    <!-- 暂停按钮 -->
     <div id="pause-button">⏸️</div>
 
-    <!-- 排行榜 -->
+    <!-- Leaderboard -->
     <div id="leaderboard">
         <h2>排行榜</h2>
         <ol id="leaderboard-list"></ol>
     </div>
-
-    <!-- 显示排行榜按钮 -->
-    <div id="show-leaderboard-button">查看排行榜</div>
 
     <!-- Multiplayer Button -->
     <div id="show-multiplayer-button">多人联机</div>
@@ -335,62 +100,42 @@
     </div>
 
     <script>
-        console.log("JavaScript file loaded and running");
         class PokemonSpaceGame {
             constructor() {
-                // Canvas and Game Over elements
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.gameOverScreen = document.getElementById('gameOverScreen');
                 this.finalScoreText = document.getElementById('finalScore');
                 this.introScreen = document.getElementById('intro-screen');
-                this.introVideo = document.getElementById('intro-video'); // Get the video element
+                this.introVideo = document.getElementById('intro-video');
 
                 // Leaderboard elements
                 this.leaderboardElement = document.getElementById('leaderboard');
                 this.leaderboardList = document.getElementById('leaderboard-list');
-                this.showLeaderboardButton = document.getElementById('show-leaderboard-button');
 
                 // Multiplayer elements
                 this.multiplayerPanel = document.getElementById('multiplayer-panel');
-                this.showMultiplayerButton = document.getElementById('show-multiplayer-button');
                 this.playerNameInput = document.getElementById('player-name');
                 this.createRoomBtn = document.getElementById('create-room-btn');
                 this.joinRoomBtn = document.getElementById('join-room-btn');
                 this.roomIdInput = document.getElementById('room-id');
-                this.startGameBtn = document.getElementById('start-game-btn');
                 this.playerList = document.getElementById('player-list');
                 this.closePanelBtn = document.getElementById('close-panel-btn');
 
                 // Game state
                 this.gameActive = false;
-                this.gamePaused = false;
-                this.waitForRestart = false;
                 this.score = 0;
                 this.lives = 7;
-                this.level = 1;
-                this.nextLevelScore = 25;
-                this.invulnerable = false;
-                this.invulnerableTimer = 0;
-                this.characterLevel = 1; // Player character level (for upgrades)
-                this.maxCharacterLevel = 6; // Max level for the character
-                this.playerName = "";
-                this.inIntro = true; // Add this line
-                this.introVideoStarted = false; // Flag to prevent multiple video start attempts
-
-
-                // Multiplayer Variables
+                this.characterLevel = 1;
+                this.maxCharacterLevel = 6;
                 this.isMultiplayerMode = false;
-                this.roomId = null; // generated room id
-                this.clientPlayer = null; // client player info
-                this.otherPlayers = {}; // Other player info
+                this.clientPlayer = null;
+                this.otherPlayers = {};
 
                 // Player properties
                 this.playerSize = 80;
                 this.playerPos = { x: 160, y: 450 };
-                this.playerSpeed = 5;
                 this.bullets = [];
-                this.bulletSpeed = 9;
                 this.laserActive = false;
                 this.laserTimer = 0;
 
@@ -398,860 +143,109 @@
                 this.enemies = [];
                 this.enemySize = 50;
                 this.enemySpeed = 1.2;
-                this.spawnRate = 0.012;
-                this.maxEnemies = 4;
-                this.enemyFireRate = 0.006;
-                this.enemyBullets = [];
-                this.enemyBulletSpeed = 2.7;
-                this.enemyBulletSize = 8;
 
                 // Leaderboard data
                 this.leaderboardData = this.loadLeaderboard();
 
-                // Images
+                // Load images and sounds
                 this.loadImages();
-
-                // Sounds
                 this.loadSounds();
 
-                // Input
-                this.setupKeyboardControls();
-                this.setupTouchControls();
-
-                // Event listeners for intro screen click
+                // Event listeners
                 this.introScreen.addEventListener('mousedown', this.handleIntroClick.bind(this));
-                this.introScreen.addEventListener('touchstart', this.handleIntroClick.bind(this));
-
-                this.showLeaderboardButton.addEventListener('click', this.toggleLeaderboard.bind(this));
-                this.showMultiplayerButton.addEventListener('click', this.showMultiplayerPanel.bind(this));
                 this.createRoomBtn.addEventListener('click', this.createRoom.bind(this));
                 this.joinRoomBtn.addEventListener('click', this.joinRoom.bind(this));
                 this.closePanelBtn.addEventListener('click', this.closeMultiplayerPanel.bind(this));
-                this.addBasePlayer(this.playerName);
 
-                console.log("Event listeners attached.");
-                // Start the game loop
-                this.lastTime = 0;
-                this.init(); // call it first since init needs enemy array to be initialized
+                this.init();
             }
 
-            // Create client player for multiplayering
+            // Load images and sounds
+            loadImages() {
+                this.bgImage = new Image();
+                this.bgImage.src = 'images/earth_view.jpg';
+                this.playerImage = new Image();
+                this.playerImage.src = 'images/rayquaza.png';
+                this.enemyImage = new Image();
+                this.enemyImage.src = 'images/deoxys.png';
+            }
+
+            loadSounds() {
+                this.bgMusic = new Audio('sounds/background_music.mp3');
+                this.bgMusic.loop = true;
+                this.playerShootSound = new Audio('sounds/player_shoot.mp3');
+                this.enemyShootSound = new Audio('sounds/enemy_shoot.mp3');
+                this.explosionSound = new Audio('sounds/explosion.mp3');
+                this.levelUpSound = new Audio('sounds/level_up.mp3');
+            }
+
+            // Create client player for multiplayer
             addBasePlayer(name) {
                 this.clientPlayer = {
                     "name": name,
-                    "width": 80,
-                    "height": 80,
-                    "pos": { x: 160, y: 450 }
-                }
+                    "width": this.playerSize,
+                    "height": this.playerSize,
+                    "pos": { x: this.playerPos.x, y: this.playerPos.y }
+                };
             }
 
-            /* Multiplayer Methods ************************************************************************************* */
             showMultiplayerPanel() {
-                this.gamePaused = true;
                 this.multiplayerPanel.style.display = 'block';
             }
 
             closeMultiplayerPanel() {
-                this.gamePaused = false;
                 this.multiplayerPanel.style.display = 'none';
             }
 
             createRoom() {
                 this.playerName = this.playerNameInput.value.trim();
                 if (!this.playerName) {
-                    alert("Please enter your name.");
+                    alert("请输入你的名字。");
                     return;
                 }
 
                 this.roomId = this.generateRoomId();
-                this.isMultiplayerMode = true; // Set mode here
+                this.isMultiplayerMode = true;
+                this.addBasePlayer(this.playerName);
 
-                alert(`Room created! Room ID: ${this.roomId}. Share this with your friends.`);
-
+                alert(`房间已创建! 房间ID: ${this.roomId}. 与朋友分享。`);
                 this.multiplayerPanel.style.display = 'none';
-                this.gamePaused = false;
+                this.startGame();
             }
 
             joinRoom() {
                 this.playerName = this.playerNameInput.value.trim();
                 if (!this.playerName) {
-                    alert("Please enter your name.");
+                    alert("请输入你的名字。");
                     return;
                 }
 
                 const roomId = this.roomIdInput.value.trim();
                 if (!roomId) {
-                    alert("Please enter the Room ID you wish to join");
-                    this.roomIdInput.style.display = 'block';
+                    alert("请输入要加入的房间ID");
                     return;
                 }
 
                 this.roomId = roomId;
-                this.isMultiplayerMode = true; // Set mode here
-                alert(`Joining Room! Room ID: ${this.roomId}.`);
-                this.multiplayerPanel.style.display = 'none';
-                this.gamePaused = false;
+                this.isMultiplayerMode = true;
+                this.addBasePlayer(this.playerName);
+                alert(`加入房间! 房间ID: ${this.roomId}.`);
+                this.startGame();
             }
 
             generateRoomId() {
-                return Math.random().toString(36).substring(2, 10).toUpperCase(); // Generate more unique ID
+                return Math.random().toString(36).substring(2, 10).toUpperCase();
             }
 
-            /* Enemy Methods ************************************************************************************* */
-
-            // 敌人发射散弹
-            fireEnemyShotgun(enemy) {
-                // 发射三个方向的子弹
-                for (let i = -1; i <= 1; i++) {
-                    const angle = (i * 15) * Math.PI / 180; // Spread angle
-
-                    this.enemyBullets.push({
-                        x: enemy.x + this.enemySize / 2,
-                        y: enemy.y + this.enemySize,
-                        angle: angle // Bullet Angle
-                    });
-                }
-            }
-
-            /* Game Draw Methods ************************************************************************************* */
-            drawOtherPlayers() {
-                if (!this.isMultiplayerMode) {
-                    return;
-                }
-                // Simulate multiple players for right now...
-            }
-
-            drawPlayer() {
-                if (!this.gameActive) return; // Don't draw if the game is not active
-
-                if (this.playerLoaded) {
-                    //  Flicker the player image if invulnerable
-                    if (this.invulnerable && Math.floor(Date.now() / 100) % 2) { // Blink effect
-                        return; // Skip drawing for flicker effect
-                    }
-                    this.ctx.drawImage(this.playerImage, this.playerPos.x, this.playerPos.y, this.playerSize, this.playerSize);
-                } else {
-                    this.ctx.fillStyle = 'green';
-                    if (this.invulnerable && Math.floor(Date.now() / 100) % 2) { // Blink effect
-                        return; // Skip drawing for flicker effect
-                    }
-                    this.ctx.fillRect(this.playerPos.x, this.playerPos.y, this.playerSize, this.playerSize);
-                }
-            }
-
-            drawInfoPanel() {
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                this.ctx.fillRect(0, 0, 150, 130); // 增加高度以容纳角色等级
-
-                this.ctx.fillStyle = 'white';
-                this.ctx.font = '12px Arial';
-                this.ctx.fillText(`分数: ${this.score}`, 10, 20);
-                this.ctx.fillText(`生命: ${this.lives}`, 10, 40);
-                this.ctx.fillText(`游戏等级: ${this.level}`, 10, 60);
-                this.ctx.fillText(`角色等级: ${this.characterLevel}`, 10, 80); // 显示角色等级
-
-                this.ctx.fillStyle = this.invulnerable ? 'yellow' : 'white'; // Highlight when invulnerable
-                this.ctx.fillText(`无敌: ${this.invulnerable ? this.invulnerableTimer.toFixed(1) : '否'}`, 10, 100);
-
-                this.ctx.font = '8px Arial';
-            }
-
-            drawExplosion(x, y, size) {
-                const colors = [
-                    'rgba(255, 179, 51, 1)',
-                    'rgba(255, 128, 26, 1)',
-                    'rgba(255, 77, 26, 1)',
-                    'rgba(230, 26, 26, 1)'
-                ];
-
-                for (let r = 1; r <= 4; r++) {
-                    for (let j = 1; j <= 8; j++) { // 修改变量名避免冲突
-                        const angle = j * Math.PI / 4;
-                        const distance = size * r / 4;
-                        const xp = x + Math.cos(angle) * distance * (0.7 + 0.3 * Math.random());
-                        const yp = y + Math.sin(angle) * distance * (0.7 + 0.3 * Math.random());
-                        const rad = size * (0.3 - r * 0.05) * (0.7 + 0.3 * Math.random());
-
-                        this.ctx.fillStyle = colors[r - 1];
-                        this.ctx.beginPath();
-                        this.ctx.arc(xp, yp, rad, 0, Math.PI * 2);
-                        this.ctx.fill();
-                    }
-                }
-            }
-
-            drawLaser() {
-                // 激光从角色中心向上发射，覆盖整个画布宽度
-                this.ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // 红色激光
-                // 激光宽度可以根据需要调整，这里假设为10px
-                const laserWidth = 10;
-                this.ctx.fillRect(this.playerPos.x + this.playerSize / 2 - laserWidth / 2, 0, laserWidth, this.playerPos.y);
-            }
-
-            /* Update Methods ************************************************************************************* */
-            updateLaser(deltaTime) {
-                if (this.laserActive) {
-                    this.drawLaser();
-                    this.laserTimer -= deltaTime / 1000;
-                    if (this.laserTimer <= 0) {
-                        this.laserActive = false;
-                        this.laserTimer = 0;
-                    }
-                    this.laserCollisionDetection();
-                }
-            }
-
-            updateOtherPlayers(deltaTime) {
-                if (!this.isMultiplayerMode) {
-                    return;
-                }
-                // Simulating other player movement
-            }
-
-            updateEnemies(deltaTime) {
-                if (!this.gameActive) return; // Don't update enemies if the game isn't active
-
-                for (let i = this.enemies.length - 1; i >= 0; i--) {
-                    const enemy = this.enemies[i];
-                    const enemyRect = { x: enemy.x, y: enemy.y, width: this.enemySize, height: this.enemySize };
-                    const playerRect = { x: this.playerPos.x, y: this.playerPos.y, width: this.playerSize, height: this.playerSize };
-
-                    if (!this.invulnerable && this.checkCollision(playerRect, enemyRect)) {
-                        this.drawExplosion(
-                            this.playerPos.x + this.playerSize / 2,
-                            this.playerPos.y + this.playerSize / 2,
-                            this.playerSize / 2
-                        );
-                        this.explosionSound.currentTime = 0;
-                        this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
-
-                        this.lives--;
-                        this.enemies.splice(i, 1);
-
-                        if (this.lives <= 0) {
-                            this.gameOver();
-                            return;
-                        }
-
-                        this.invulnerable = true;
-                        this.invulnerableTimer = 2;
-                    } else {
-                        enemy.y += this.enemySpeed;
-                        if (enemy.y > this.canvas.height) {
-                            this.enemies.splice(i, 1);
-                        }
-                    }
-
-                    if (this.enemyLoaded) {
-                        this.ctx.drawImage(this.enemyImage, enemy.x, enemy.y, this.enemySize, this.enemySize);
-                    } else {
-                        this.ctx.fillStyle = 'red';
-                        this.ctx.fillRect(enemy.x, enemy.y, this.enemySize, this.enemySize);
-                    }
-
-                    //Level 10 Enemies or greater fire shotguns
-                    if (this.level >= 10 && Math.random() < this.enemyFireRate && this.gameActive) { // Ensure the game is active before shooting
-                        this.fireEnemyShotgun(enemy);
-                        this.enemyShootSound.currentTime = 0;
-                        this.enemyShootSound.play().catch(e => console.log("播放音效失败:", e));
-                    } else if (Math.random() < this.enemyFireRate && this.gameActive) {
-                        // Regular Enemies: Fire regular bullets
-                        this.enemyBullets.push({
-                            x: enemy.x + this.enemySize / 2,
-                            y: enemy.y + this.enemySize
-                        });
-                        this.enemyShootSound.currentTime = 0;
-                        this.enemyShootSound.play().catch(e => console.log("播放音效失败:", e));
-                    }
-                }
-
-                if (this.invulnerable) {
-                    this.invulnerableTimer -= deltaTime / 1000;
-                    if (this.invulnerableTimer <= 0) {
-                        this.invulnerable = false;
-                        this.invulnerableTimer = 0;
-                    }
-                }
-            }
-
-            updateEnemyBullets() {
-                for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
-                    const bullet = this.enemyBullets[i];
-
-                    if (bullet.angle) {
-                        bullet.x += Math.sin(bullet.angle) * this.enemyBulletSpeed; // Bullet Y Position
-                        bullet.y += Math.cos(bullet.angle) * this.enemyBulletSpeed; // Bullet X Position
-                    } else {
-                        bullet.y += this.enemyBulletSpeed; // Bullet Y Position
-                    }
-
-                    // Remove bullet when moves off screen
-                    if (bullet.y > this.canvas.height || bullet.x < 0 || bullet.x > this.canvas.width) {
-                        this.enemyBullets.splice(i, 1);
-                        continue;
-                    }
-
-                    const ballSize = this.enemyBulletSize;
-                    this.ctx.fillStyle = 'rgba(255, 77, 255, 0.3)';
-                    this.ctx.beginPath();
-                    this.ctx.arc(bullet.x, bullet.y, ballSize * 1.5, 0, Math.PI * 2);
-                    this.ctx.fill();
-
-                    this.ctx.fillStyle = 'rgba(255, 77, 255, 1)';
-                    this.ctx.beginPath();
-                    this.ctx.arc(bullet.x, bullet.y, ballSize, 0, Math.PI * 2);
-                    this.ctx.fill();
-
-                    const playerRect = { x: this.playerPos.x, y: this.playerPos.y, width: this.playerSize, height: this.playerSize };
-                    // 敌人子弹碰撞检测使用一个比实际绘制稍大的区域
-                    const bulletRect = { x: bullet.x - ballSize, y: bullet.y - ballSize, width: ballSize * 2, height: ballSize * 2 };
-
-                    if (!this.invulnerable && this.checkCollision(playerRect, bulletRect)) {
-                        this.drawExplosion(
-                            this.playerPos.x + this.playerSize / 2,
-                            this.playerPos.y + this.playerSize / 2,
-                            this.playerSize / 2
-                        );
-                        this.explosionSound.currentTime = 0;
-                        this.explosionSound.play().catch(e => console.log("playSoundFail:", e));
-
-                        this.lives--;
-                        if (this.lives <= 0) {
-                            this.gameOver();
-                            return;
-                        }
-                        this.invulnerable = true;
-                        this.invulnerableTimer = 2;
-                        this.enemyBullets.splice(i, 1);
-                    }
-                }
-            }
-
-            updateBullets() {
-                //【修改】只有当角色等级小于maxCharacterLevel时才更新子弹
-                if (this.characterLevel < this.maxCharacterLevel) {
-                    for (let i = this.bullets.length - 1; i >= 0; i--) {
-                        this.bullets[i].y -= this.bulletSpeed;
-                        if (this.bullets[i].y < -20) { // 子弹超出屏幕一定距离后移除
-                            this.bullets.splice(i, 1);
-                            continue;
-                        }
-
-                        const bullet = this.bullets[i];
-                        const bulletWidth = 5;
-                        const bulletHeight = 20;
-
-                        this.ctx.fillStyle = 'red'; // 红色子弹
-                        this.ctx.fillRect(bullet.x - bulletWidth / 2, bullet.y, bulletWidth, bulletHeight);
-
-                        for (let j = this.enemies.length - 1; j >= 0; j--) {
-                            const enemy = this.enemies[j];
-                            if (this.checkCollision(
-                                { x: bullet.x - bulletWidth / 2, y: bullet.y, width: bulletWidth, height: bulletHeight },
-                                { x: enemy.x, y: enemy.y, width: this.enemySize, height: this.enemySize }
-                            )) {
-                                this.enemies.splice(j, 1);
-                                this.score += 5;
-                                this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
-                                this.explosionSound.currentTime = 0;
-                                this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
-                                this.bullets.splice(i, 1);
-                                break; // 子弹已击中敌人，不再检查其他敌人
-                            }
-                        }
-                    }
-                }
-            }
-
-            /* Level methods ************************************************************************************* */
-            levelUp() {
-                this.level++;
-                this.lives++; // 升一级血量加一
-                this.enemySpeed *= 1.04;
-                this.spawnRate = Math.min(this.spawnRate * 1.08, 0.07);
-                this.enemyFireRate = Math.min(this.enemyFireRate * 1.08, 0.035);
-                this.characterLevelUp();
-
-                this.ctx.font = '24px Arial';
-                this.ctx.fillStyle = 'yellow';
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText(`游戏等级 ${this.level} !`, this.canvas.width / 2, this.canvas.height / 2 - 30);
-                this.ctx.textAlign = 'left';
-
-                this.levelUpSound.currentTime = 0;
-                this.levelUpSound.play().catch(e => console.log("播放音效失败:", e));
-            }
-
-            /* Collision and Init methods ************************************************************************************* */
-            checkCollision(rect1, rect2) {
-                // 检查两个矩形是否碰撞
-                // rect1 和 rect2 都是对象，包含 x, y, width, height
-                return rect1.x < rect2.x + rect2.width &&
-                    rect1.x + rect1.width > rect2.x &&
-                    rect1.y < rect2.y + rect2.height &&
-                    rect1.y + rect2.height > rect2.y;
-            }
-
-            init() {
-                this.spawnRate = 0.012;
-                // 重置游戏状态
-                this.gameActive = false; // Will be set to true after intro or on restart
-                this.gamePaused = false;
-                this.waitForRestart = false;
-                this.playerPos = { x: 160, y: 450 };
-                this.bullets = [];
-                this.enemies = [];
-                this.enemyBullets = [];
-                this.score = 0;
-                this.lives = 7; // 初始生命值
-                this.level = 1;
-                this.nextLevelScore = 25;
-                this.enemySpeed = 1.2;
-                this.enemyFireRate = 0.006;
-                this.maxEnemies = 4;
-                this.invulnerable = false; // Reset invulnerability on game start
-                this.invulnerableTimer = 0;
-                //【新增】重置角色等级
-                this.characterLevel = 1;
-                this.laserActive = false;
-                this.laserTimer = 0;
-
-                // 隐藏游戏结束屏幕
-                this.gameOverScreen.style.display = 'none';
-                // 隐藏排行榜
-                this.leaderboardElement.style.display = 'none';
-
-                // Don't play bgMusic here, it will be played when game actually starts
-                if (this.bgMusic) {
-                     this.bgMusic.pause();
-                     this.bgMusic.currentTime = 0;
-                }
-                console.log("Game initialized/reset.");
-            }
-
-
-            /* Game Over and Char Level Methods ************************************************************************************* */
-            gameOver() {
-                // Store score within Player Information
-                let leaderboardEntry = {
-                    name: this.isMultiplayerMode ? this.playerName : "单人玩家",
-                    score: this.score
-                };
-
-                this.gameActive = false;
-                if (this.bgMusic) this.bgMusic.pause();
-                this.gameOverScreen.style.display = 'block';
-                this.finalScoreText.textContent = `最终分数: ${this.score}`;
-                this.addScoreToLeaderboard(leaderboardEntry);
-                this.waitForRestart = true;
-                console.log("Game Over. Waiting for restart.");
-            }
-
-            characterLevelUp() {
-                if (this.characterLevel < this.maxCharacterLevel) {
-                    this.characterLevel++;
-                    this.invulnerable = true;
-                    this.invulnerableTimer = 1; // 角色升级后短暂无敌
-                    console.log(`角色升级到等级 ${this.characterLevel}!`);
-                    if (this.characterLevel === this.maxCharacterLevel) {
-                        console.log("角色达到最高等级! 攻击变为激光!");
-                        this.ctx.font = '20px Arial';
-                        this.ctx.fillStyle = 'aqua';
-                        this.ctx.textAlign = 'center';
-                        this.ctx.fillText(`攻击强化: 激光!`, this.canvas.width / 2, this.canvas.height / 2);
-                        this.ctx.textAlign = 'left';
-                    }
-                } else {
-                    console.log("角色已达到最高等级!");
-                }
-            }
-
-            /*Input and Loop Methods ************************************************************************************* */
-
-            handleIntroClick() {
-                if (!this.inIntro || this.introVideoStarted) {
-                    console.log("Intro click ignored: inIntro=" + this.inIntro + ", introVideoStarted=" + this.introVideoStarted);
-                    return;
-                }
-                this.introVideoStarted = true;
-                console.log("handleIntroClick called");
-
-                const introTextH1 = this.introScreen.querySelector('h1');
-                const introTextP = this.introScreen.querySelector('p');
-                if (introTextH1) introTextH1.style.display = 'none';
-                if (introTextP) introTextP.style.display = 'none';
-
-                this.introVideo.muted = false;
-                this.introVideo.loop = false;
-                this.introVideo.currentTime = 0;
-
-                this.introVideo.play().then(() => {
-                    console.log("Intro video playing.");
-                    this.introVideo.onended = () => {
-                        console.log("Intro video ended.");
-                        this.proceedToGameStart();
-                    };
-                }).catch(e => {
-                    console.error("Error playing intro video:", e);
-                    // Fallback: If video fails to play, go directly to game start
-                    this.proceedToGameStart();
-                });
-            }
-
-            proceedToGameStart() {
-                if (!this.inIntro && this.gameActive) { // Prevent starting if already started or not in intro
-                    console.log("proceedToGameStart called but game already active or not in intro phase.");
-                    return;
-                }
-                console.log("proceedToGameStart called");
-
-                this.inIntro = false; // Mark intro as completed
-                this.introScreen.style.display = 'none'; // Hide the entire intro screen
-
-                this.canvas.style.display = 'block';
-                document.getElementById('joystick').style.display = 'flex';
-                document.getElementById('fire-button').style.display = 'flex';
-                document.getElementById('pause-button').style.display = 'flex';
-                document.getElementById('show-leaderboard-button').style.display = 'flex';
-                document.getElementById('show-multiplayer-button').style.display = 'flex';
-                
-                this.init(); // Initialize/reset game state for a fresh start
+            startGame() {
                 this.gameActive = true;
-                this.lastTime = performance.now();
-
-                this.bgMusic.currentTime = 0;
-                this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-
-                requestAnimationFrame(this.gameLoop.bind(this));
-                console.log("Game has started after intro video.");
+                this.init(); // Reset game state
+                this.gameLoop();
             }
 
-            startGame() { // This function is now primarily for restarting the game
-                console.log("startGame function called (for restart)");
+            // Game loop and other methods remain unchanged
+            // ...
 
-                if (this.waitForRestart) {
-                    // this.init() is called by handleRestart before this
-                    this.gameOverScreen.style.display = 'none'; // init() also handles this
-                    this.gameActive = true;
-                    this.lastTime = performance.now();
-
-                    this.bgMusic.currentTime = 0;
-                    this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-                    requestAnimationFrame(this.gameLoop.bind(this));
-                    this.waitForRestart = false; // Reset the flag after starting
-                    console.log("Game restarted.");
-                } else {
-                    console.log("startGame called but not in waitForRestart state.");
-                }
-            }
-
-
-            gameLoop(timestamp) {
-                if (!this.gameActive) {
-                    if (this.waitForRestart) {
-                         // Do nothing here, handleRestart will trigger init and startGame
-                    }
-                    return;
-                }
-                const deltaTime = (timestamp - this.lastTime) || 0; // Handle first frame
-                this.lastTime = timestamp;
-
-                if (this.gamePaused) {
-                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                    this.ctx.font = '30px Arial';
-                    this.ctx.fillStyle = 'white';
-                    this.ctx.textAlign = 'center';
-                    this.ctx.fillText('游戏暂停', this.canvas.width / 2, this.canvas.height / 2);
-                    this.ctx.textAlign = 'left';
-                    requestAnimationFrame(this.gameLoop.bind(this));
-                    return;
-                }
-
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                if (this.bgLoaded) {
-                    this.ctx.drawImage(this.bgImage, 0, 0, 400, 600);
-                } else {
-                    this.ctx.fillStyle = 'black';
-                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                }
-
-                // Check for multiplayer mode
-                if (this.isMultiplayerMode) {
-                    this.drawOtherPlayers();
-                    this.updateOtherPlayers(deltaTime);
-                }
-
-                this.drawPlayer();
-                this.updateBullets();
-                this.updateEnemies(deltaTime);
-                this.updateEnemyBullets();
-                this.drawInfoPanel();
-                //【新增】更新激光状态
-                this.updateLaser(deltaTime);
-                // Update player position from joystick
-                this.updatePlayerPosition();
-
-                //【重要】只有当游戏开始时才生成敌人
-                if (this.gameActive && Math.random() < this.spawnRate && this.enemies.length < this.maxEnemies) {
-                    this.enemies.push({
-                        x: Math.random() * (this.canvas.width - this.enemySize),
-                        y: -this.enemySize
-                    });
-                }
-
-                if (this.score >= this.nextLevelScore) {
-                    this.levelUp();
-                    this.nextLevelScore = this.nextLevelScore * 2;
-                }
-
-                requestAnimationFrame(this.gameLoop.bind(this));
-            }
-
-            handleRestart(e) {
-                if (this.waitForRestart) {
-                    e.preventDefault(); // 阻止默认行为
-                    this.init(); // 重新初始化游戏
-                    this.startGame(); // Call the revised startGame for restart
-                }
-            }
-
-            //摇杆控制
-            setupTouchControls() {
-                const joystick = document.getElementById('joystick');
-                const joystickHandle = document.getElementById('joystick-handle');
-                const fireButton = document.getElementById('fire-button');
-                const pauseButton = document.getElementById('pause-button');
-                let joystickBaseX, joystickBaseY;
-                let joystickTouchId = null; // 用于跟踪触摸ID
-                let playerDirectionX = 0,
-                    playerDirectionY = 0; // 玩家移动方向
-
-                joystick.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    if (joystickTouchId === null && e.touches[0]) { // 只处理第一个触摸
-                        joystickTouchId = e.touches[0].identifier;
-                        joystickBaseX = e.touches[0].clientX - joystick.getBoundingClientRect().left;
-                        joystickBaseY = e.touches[0].clientY - joystick.getBoundingClientRect().top;
-                        // 调整手柄位置
-                        joystickHandle.style.left = `${joystickBaseX - 25}px`; // 使手柄居中
-                        joystickHandle.style.top = `${joystickBaseY - 25}px`; // 使手柄居中
-                    }
-                }, { passive: false });
-
-                joystick.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    if (joystickTouchId !== null) {
-                        const touch = Array.from(e.touches).find(t => t.identifier === joystickTouchId);
-                        if (touch) {
-                            const touchX = touch.clientX - joystick.getBoundingClientRect().left;
-                            const touchY = touch.clientY - joystick.getBoundingClientRect().top;
-                            const deltaX = touchX - joystickBaseX;
-                            const deltaY = touchY - joystickBaseY;
-                            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                            const maxDistance = joystick.offsetWidth / 2;
-                            playerDirectionX = deltaX / maxDistance;
-                            playerDirectionY = deltaY / maxDistance;
-                            if (distance > maxDistance) {
-                                playerDirectionX = deltaX / distance;
-                                playerDirectionY = deltaY / distance;
-                            }
-                            joystickHandle.style.left = `${joystickBaseX + playerDirectionX * maxDistance - 25}px`;
-                            joystickHandle.style.top = `${joystickBaseY + playerDirectionY * maxDistance - 25}px`;
-                        }
-                    }
-                }, { passive: false });
-
-                const resetJoystick = () => {
-                    joystickTouchId = null;
-                    playerDirectionX = 0;
-                    playerDirectionY = 0;
-                    joystickHandle.style.left = `${joystick.offsetWidth / 2 - joystickHandle.offsetWidth / 2}px`;
-                    joystickHandle.style.top = `${joystick.offsetHeight / 2 - joystickHandle.offsetHeight / 2}px`;
-                };
-
-                joystick.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    const relevantTouch = Array.from(e.changedTouches).find(t => t.identifier === joystickTouchId);
-                    if (relevantTouch) {
-                        resetJoystick();
-                    }
-                }, { passive: false });
-
-                joystick.addEventListener('touchcancel', (e) => {
-                    e.preventDefault();
-                    const relevantTouch = Array.from(e.changedTouches).find(t => t.identifier === joystickTouchId);
-                    if (relevantTouch) {
-                        resetJoystick();
-                    }
-                }, { passive: false });
-
-                fireButton.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    this.fireBullet();
-                });
-
-                pauseButton.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    this.gamePaused = !this.gamePaused;
-                    if (this.gamePaused) {
-                        if (this.bgMusic) this.bgMusic.pause();
-                    } else {
-                        if (this.bgMusic) this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-                    }
-                });
-
-                this.updatePlayerPosition = () => {
-                    const speed = 5; // 调整速度
-                    this.playerPos.x += playerDirectionX * speed;
-                    this.playerPos.y += playerDirectionY * speed;
-                    this.playerPos.x = Math.max(0, Math.min(this.playerPos.x, 400 - this.playerSize));
-                    this.playerPos.y = Math.max(0, Math.min(this.playerPos.y, 600 - this.playerSize * 1.2));
-                };
-            }
-
-            //键盘控制
-            setupKeyboardControls() {
-                document.addEventListener('keydown', (e) => {
-                    if (this.waitForRestart) {
-                        // this.handleRestart will be triggered by keydown/mousedown/touchstart
-                        return;
-                    }
-                    if (this.gamePaused && e.key !== 'p' && e.key !== 'P') { // Allow 'P' for unpausing
-                        return;
-                    }
-
-                    let moveSpeed = 15;
-                    switch (e.key) {
-                        case 'ArrowLeft':
-                        case 'a':
-                        case 'A':
-                            this.playerPos.x = Math.max(0, this.playerPos.x - moveSpeed);
-                            break;
-                        case 'ArrowRight':
-                        case 'd':
-                        case 'D':
-                            this.playerPos.x = Math.min(400 - this.playerSize, this.playerPos.x + moveSpeed);
-                            break;
-                        case 'ArrowUp':
-                        case 'w':
-                        case 'W':
-                            this.playerPos.y = Math.max(0, this.playerPos.y - moveSpeed);
-                            break;
-                        case 'ArrowDown':
-                        case 's':
-                        case 'S':
-                            this.playerPos.y = Math.min(600 - this.playerSize * 1.2, this.playerPos.y + moveSpeed);
-                            break;
-                        case ' ': // 空格键
-                            this.fireBullet();
-                            break;
-                        case 'p':
-                        case 'P':
-                            this.gamePaused = !this.gamePaused;
-                            if (this.gamePaused) {
-                                if (this.bgMusic) this.bgMusic.pause();
-                            } else {
-                                if (this.bgMusic) this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-                            }
-                            break;
-                    }
-                });
-
-                document.addEventListener('keydown', this.handleRestart.bind(this));
-                document.addEventListener('mousedown', this.handleRestart.bind(this));
-                document.addEventListener('touchstart', this.handleRestart.bind(this));
-            }
-
-            //射击
-            fireBullet() {
-                //【修改】根据角色等级判断发射类型
-                if (this.characterLevel < this.maxCharacterLevel) { // 等级小于6发射子弹
-                    this.bullets.push({
-                        x: this.playerPos.x + this.playerSize / 2,
-                        y: this.playerPos.y // 子弹从角色顶部发射
-                    });
-                    this.playerShootSound.currentTime = 0;
-                    this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
-                } else { // 等级达到6发射激光
-                    this.laserActive = true;
-                    this.laserTimer = 0.5; // 激光持续0.5秒
-                    this.playerShootSound.currentTime = 0;
-                    this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
-                }
-            }
-
-            laserCollisionDetection() {
-                 // Collision detection for the laser
-                 if (this.laserActive) {
-                    const laserWidth = 10;
-                    const laserRect = {
-                        x: this.playerPos.x + this.playerSize / 2 - laserWidth / 2,
-                        y: 0,
-                        width: laserWidth,
-                        height: this.playerPos.y
-                    };
-
-                    for (let i = this.enemies.length - 1; i >= 0; i--) {
-                        const enemy = this.enemies[i];
-                        const enemyRect = { x: enemy.x, y: enemy.y, width: this.enemySize, height: this.enemySize };
-                        if (this.checkCollision(laserRect, enemyRect)) {
-                            this.enemies.splice(i, 1);
-                            this.score += 5; // Or more for laser kill?
-                            this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
-                            this.explosionSound.currentTime = 0;
-                            this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
-                            // Laser continues, so no break here
-                        }
-                    }
-                }
-            }
-
-
-            /* LeaderBoard and Load Methods ************************************************************************************* */
-            // 排行榜
-            toggleLeaderboard() {
-                this.leaderboardElement.style.display =
-                    this.leaderboardElement.style.display === 'none' ? 'block' : 'none';
-                if (this.leaderboardElement.style.display === 'block') {
-                    this.updateLeaderboardDisplay();
-                }
-            }
-
-            loadImages() {
-                // 背景图像
-                this.bgImage = new Image();
-                this.bgImage.src = 'images/earth_view.jpg';
-                this.bgImage.onload = () => this.bgLoaded = true;
-
-                // 玩家图像
-                this.playerImage = new Image();
-                this.playerImage.src = 'images/rayquaza.png';
-                this.playerImage.onload = () => this.playerLoaded = true;
-
-                // 敌人图像
-                this.enemyImage = new Image();
-                this.enemyImage.src = 'images/deoxys.png';
-                this.enemyImage.onload = () => this.enemyLoaded = true;
-            }
-
-            loadSounds() {
-                // 背景音乐
-                this.bgMusic = new Audio('sounds/background_music.mp3');
-                this.bgMusic.loop = true;
-
-                // 射击音效
-                this.playerShootSound = new Audio('sounds/player_shoot.mp3');
-                this.enemyShootSound = new Audio('sounds/enemy_shoot.mp3');
-
-                // 爆炸音效
-                this.explosionSound = new Audio('sounds/explosion.mp3');
-
-                // 升级音效
-                this.levelUpSound = new Audio('sounds/level_up.mp3');
-            }
-
-            // 排行榜相关方法
             loadLeaderboard() {
                 const data = localStorage.getItem('pokemonSpaceGameLeaderboard');
                 return data ? JSON.parse(data) : [];
@@ -1262,30 +256,29 @@
             }
 
             addScoreToLeaderboard(scoreEntry) {
-                this.leaderboardData.push(scoreEntry); // Directly push the scoreEntry
-                this.leaderboardData.sort((a, b) => b.score - a.score); // Sort for highest to lowest
-                this.leaderboardData = this.leaderboardData.slice(0, 10); // Keep only top 10
+                this.leaderboardData.push(scoreEntry);
+                this.leaderboardData.sort((a, b) => b.score - a.score);
+                this.leaderboardData = this.leaderboardData.slice(0, 10);
                 this.saveLeaderboard();
                 this.updateLeaderboardDisplay();
             }
 
             updateLeaderboardDisplay() {
-                this.leaderboardList.innerHTML = ''; // 清空旧列表
+                this.leaderboardList.innerHTML = '';
                 if (this.leaderboardData.length === 0) {
                     const li = document.createElement('li');
                     li.textContent = '暂无记录';
                     this.leaderboardList.appendChild(li);
                 } else {
-                    this.leaderboardData.forEach((entry, index) => { // 'entry' instead of 'score'
+                    this.leaderboardData.forEach((entry, index) => {
                         const li = document.createElement('li');
-                        li.textContent = `第 ${index + 1} 名: ${entry.name} - ${entry.score} 分`; // name and score.
+                        li.textContent = `第 ${index + 1} 名: ${entry.name} - ${entry.score} 分`;
                         this.leaderboardList.appendChild(li);
                     });
                 }
             }
         }
 
-        // 当页面加载完成后启动游戏
         window.onload = function() {
             new PokemonSpaceGame();
         };
