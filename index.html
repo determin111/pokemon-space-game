@@ -413,8 +413,8 @@
                         this.ctx.fillRect(enemy.x, enemy.y, this.enemySize, this.enemySize);
                     }
 
-                    // 敌人射击
-                    if (this.level >= 10 && Math.random() < this.enemyFireRate && this.gameActive) {
+                    // 敌人射击 - 7级开始发射散弹
+                    if (this.level >= 7 && Math.random() < this.enemyFireRate && this.gameActive) {
                         this.fireEnemyShotgun(enemy);
                         this.enemyShootSound.currentTime = 0;
                         this.enemyShootSound.play().catch(e => console.log("播放音效失败:", e));
@@ -946,29 +946,13 @@
                         height: this.playerPos.y
                     };
 
-                    // 激光可以同时击中路径上的所有敌人
+                    // 激光只能击中路径上的敌人，不能清除敌人子弹
                     for (let i = this.enemies.length - 1; i >= 0; i--) {
                         const enemy = this.enemies[i];
                         const enemyRect = { x: enemy.x, y: enemy.y, width: this.enemySize, height: this.enemySize };
                         
                         if (this.checkCollision(laserRect, enemyRect)) {
                             this.destroyEnemy(i, enemy);
-                        }
-                    }
-
-                    // 清除激光路径上的敌人子弹
-                    for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
-                        const bullet = this.enemyBullets[i];
-                        const bulletRect = { 
-                            x: bullet.x - this.enemyBulletSize, 
-                            y: bullet.y - this.enemyBulletSize, 
-                            width: this.enemyBulletSize * 2, 
-                            height: this.enemyBulletSize * 2 
-                        };
-                        
-                        if (this.checkCollision(laserRect, bulletRect)) {
-                            this.enemyBullets.splice(i, 1);
-                            this.drawExplosion(bullet.x, bullet.y, 10);
                         }
                     }
                 }
