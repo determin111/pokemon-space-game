@@ -288,7 +288,7 @@
 
 <body>
     <div id="intro-screen">
-        <video id="intro-video" src="videos/pokemon_intro.mp4" autoplay muted loop></video>
+        <video id="intro-video" src="videos/pokemon_intro.mp4" preload="metadata"></video>
         <h1>宝可梦太空对战</h1>
         <p>点击或触摸屏幕开始</p>
     </div>
@@ -376,6 +376,8 @@
                 this.maxCharacterLevel = 6; // Max level for the character
                 this.playerName = "";
                 this.inIntro = true; // Add this line
+                this.introVideoStarted = false; // Flag to prevent multiple video start attempts
+
 
                 // Multiplayer Variables
                 this.isMultiplayerMode = false;
@@ -416,11 +418,10 @@
                 this.setupKeyboardControls();
                 this.setupTouchControls();
 
-                // Bind 'this' context to event listner callbacks
-                this.startGame = this.startGame.bind(this);
+                // Event listeners for intro screen click
+                this.introScreen.addEventListener('mousedown', this.handleIntroClick.bind(this));
+                this.introScreen.addEventListener('touchstart', this.handleIntroClick.bind(this));
 
-                this.introScreen.addEventListener('mousedown', this.startGame);
-                this.introScreen.addEventListener('touchstart', this.startGame);
                 this.showLeaderboardButton.addEventListener('click', this.toggleLeaderboard.bind(this));
                 this.showMultiplayerButton.addEventListener('click', this.showMultiplayerPanel.bind(this));
                 this.createRoomBtn.addEventListener('click', this.createRoom.bind(this));
@@ -428,11 +429,10 @@
                 this.closePanelBtn.addEventListener('click', this.closeMultiplayerPanel.bind(this));
                 this.addBasePlayer(this.playerName);
 
-                console.log("Event listeners attached to introScreen and others.");
+                console.log("Event listeners attached.");
                 // Start the game loop
                 this.lastTime = 0;
                 this.init(); // call it first since init needs enemy array to be initialized
-                requestAnimationFrame(this.introLoop.bind(this)); // Start with introLoop
             }
 
             // Create client player for multiplayering
@@ -795,7 +795,7 @@
             init() {
                 this.spawnRate = 0.012;
                 // 重置游戏状态
-                this.gameActive = false;
+                this.gameActive = false; // Will be set to true after intro or on restart
                 this.gamePaused = false;
                 this.waitForRestart = false;
                 this.playerPos = { x: 160, y: 450 };
@@ -821,9 +821,12 @@
                 // 隐藏排行榜
                 this.leaderboardElement.style.display = 'none';
 
-                // 开始背景音乐
-                this.bgMusic.currentTime = 0;
-                this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+                // Don't play bgMusic here, it will be played when game actually starts
+                if (this.bgMusic) {
+                     this.bgMusic.pause();
+                     this.bgMusic.currentTime = 0;
+                }
+                console.log("Game initialized/reset.");
             }
 
 
@@ -836,11 +839,12 @@
                 };
 
                 this.gameActive = false;
-                this.bgMusic.pause();
+                if (this.bgMusic) this.bgMusic.pause();
                 this.gameOverScreen.style.display = 'block';
                 this.finalScoreText.textContent = `最终分数: ${this.score}`;
                 this.addScoreToLeaderboard(leaderboardEntry);
                 this.waitForRestart = true;
+                console.log("Game Over. Waiting for restart.");
             }
 
             characterLevelUp() {
@@ -863,52 +867,92 @@
             }
 
             /*Input and Loop Methods ************************************************************************************* */
-            startGame() {
-                console.log("startGame function called");
 
-                if (this.inIntro) {
-                    this.inIntro = false;
-                    this.introScreen.style.display = 'none';
-                    // Pause intro video
-                    this.introVideo.pause();
-                    this.canvas.style.display = 'block';
-                    document.getElementById('joystick').style.display = 'flex';
-                    document.getElementById('fire-button').style.display = 'flex';
-                    document.getElementById('pause-button').style.display = 'flex';
-                    document.getElementById('show-leaderboard-button').style.display = 'flex';
-                    document.getElementById('show-multiplayer-button').style.display = 'flex';
+            handleIntroClick() {
+                if (!this.inIntro || this.introVideoStarted) {
+                    console.log("Intro click ignored: inIntro=" + this.inIntro + ", introVideoStarted=" + this.introVideoStarted);
+                    return;
+                }
+                this.introVideoStarted = true;
+                console.log("handleIntroClick called");
 
+                const introTextH1 = this.introScreen.querySelector('h1');
+                const introTextP = this.introScreen.querySelector('p');
+                if (introTextH1) introTextH1.style.display = 'none';
+                if (introTextP) introTextP.style.display = 'none';
+
+                this.introVideo.muted = false;
+                this.introVideo.loop = false;
+                this.introVideo.currentTime = 0;
+
+                this.introVideo.play().then(() => {
+                    console.log("Intro video playing.");
+                    this.introVideo.onended = () => {
+                        console.log("Intro video ended.");
+                        this.proceedToGameStart();
+                    };
+                }).catch(e => {
+                    console.error("Error playing intro video:", e);
+                    // Fallback: If video fails to play, go directly to game start
+                    this.proceedToGameStart();
+                });
+            }
+
+            proceedToGameStart() {
+                if (!this.inIntro && this.gameActive) { // Prevent starting if already started or not in intro
+                    console.log("proceedToGameStart called but game already active or not in intro phase.");
+                    return;
+                }
+                console.log("proceedToGameStart called");
+
+                this.inIntro = false; // Mark intro as completed
+                this.introScreen.style.display = 'none'; // Hide the entire intro screen
+
+                this.canvas.style.display = 'block';
+                document.getElementById('joystick').style.display = 'flex';
+                document.getElementById('fire-button').style.display = 'flex';
+                document.getElementById('pause-button').style.display = 'flex';
+                document.getElementById('show-leaderboard-button').style.display = 'flex';
+                document.getElementById('show-multiplayer-button').style.display = 'flex';
+                
+                this.init(); // Initialize/reset game state for a fresh start
+                this.gameActive = true;
+                this.lastTime = performance.now();
+
+                this.bgMusic.currentTime = 0;
+                this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+
+                requestAnimationFrame(this.gameLoop.bind(this));
+                console.log("Game has started after intro video.");
+            }
+
+            startGame() { // This function is now primarily for restarting the game
+                console.log("startGame function called (for restart)");
+
+                if (this.waitForRestart) {
+                    // this.init() is called by handleRestart before this
+                    this.gameOverScreen.style.display = 'none'; // init() also handles this
                     this.gameActive = true;
-                    this.lastTime = performance.now(); // Reset lastTime
+                    this.lastTime = performance.now();
 
-                    requestAnimationFrame(this.gameLoop.bind(this));
-                    this.bgMusic.currentTime = 0; // Reset bgMusic
-                    this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-                } else if (this.waitForRestart) {
                     this.bgMusic.currentTime = 0;
                     this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
                     requestAnimationFrame(this.gameLoop.bind(this));
+                    this.waitForRestart = false; // Reset the flag after starting
+                    console.log("Game restarted.");
+                } else {
+                    console.log("startGame called but not in waitForRestart state.");
                 }
-            }
-
-            introLoop(timestamp) {
-                if (!this.inIntro) return;
-
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.ctx.fillStyle = 'black'; // Or your desired background color
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                this.ctx.fillStyle = 'white';
-                this.ctx.font = '2em Arial';
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText('宝可梦太空对战', this.canvas.width / 2, this.canvas.height / 2);
-                this.ctx.font = '1.2em Arial';
-                this.ctx.fillText('点击或触摸屏幕开始', this.canvas.width / 2, this.canvas.height / 2 + 50);
-                requestAnimationFrame(this.introLoop.bind(this));
             }
 
 
             gameLoop(timestamp) {
-                if (!this.gameActive) return;
+                if (!this.gameActive) {
+                    if (this.waitForRestart) {
+                         // Do nothing here, handleRestart will trigger init and startGame
+                    }
+                    return;
+                }
                 const deltaTime = (timestamp - this.lastTime) || 0; // Handle first frame
                 this.lastTime = timestamp;
 
@@ -968,7 +1012,7 @@
                 if (this.waitForRestart) {
                     e.preventDefault(); // 阻止默认行为
                     this.init(); // 重新初始化游戏
-                    this.startGame();
+                    this.startGame(); // Call the revised startGame for restart
                 }
             }
 
@@ -1051,9 +1095,9 @@
                     e.preventDefault();
                     this.gamePaused = !this.gamePaused;
                     if (this.gamePaused) {
-                        this.bgMusic.pause();
+                        if (this.bgMusic) this.bgMusic.pause();
                     } else {
-                        this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+                        if (this.bgMusic) this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
                     }
                 });
 
@@ -1070,7 +1114,7 @@
             setupKeyboardControls() {
                 document.addEventListener('keydown', (e) => {
                     if (this.waitForRestart) {
-                        // this.init(); // This was likely meant to be part of handleRestart
+                        // this.handleRestart will be triggered by keydown/mousedown/touchstart
                         return;
                     }
                     if (this.gamePaused && e.key !== 'p' && e.key !== 'P') { // Allow 'P' for unpausing
@@ -1106,9 +1150,9 @@
                         case 'P':
                             this.gamePaused = !this.gamePaused;
                             if (this.gamePaused) {
-                                this.bgMusic.pause();
+                                if (this.bgMusic) this.bgMusic.pause();
                             } else {
-                                this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+                                if (this.bgMusic) this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
                             }
                             break;
                     }
@@ -1136,6 +1180,33 @@
                     this.playerShootSound.play().catch(e => console.log("播放音效失败:", e));
                 }
             }
+
+            laserCollisionDetection() {
+                 // Collision detection for the laser
+                 if (this.laserActive) {
+                    const laserWidth = 10;
+                    const laserRect = {
+                        x: this.playerPos.x + this.playerSize / 2 - laserWidth / 2,
+                        y: 0,
+                        width: laserWidth,
+                        height: this.playerPos.y
+                    };
+
+                    for (let i = this.enemies.length - 1; i >= 0; i--) {
+                        const enemy = this.enemies[i];
+                        const enemyRect = { x: enemy.x, y: enemy.y, width: this.enemySize, height: this.enemySize };
+                        if (this.checkCollision(laserRect, enemyRect)) {
+                            this.enemies.splice(i, 1);
+                            this.score += 5; // Or more for laser kill?
+                            this.drawExplosion(enemy.x + this.enemySize / 2, enemy.y + this.enemySize / 2, this.enemySize);
+                            this.explosionSound.currentTime = 0;
+                            this.explosionSound.play().catch(e => console.log("播放音效失败:", e));
+                            // Laser continues, so no break here
+                        }
+                    }
+                }
+            }
+
 
             /* LeaderBoard and Load Methods ************************************************************************************* */
             // 排行榜
