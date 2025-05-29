@@ -302,6 +302,7 @@ maximum-scale=1.0, user-scalable=no">
     </div>
 
     <script>
+          console.log("JavaScript file loaded and running");
         class PokemonSpaceGame {
             constructor() {
                 // Canvas and Game Over elements
@@ -384,10 +385,12 @@ document.getElementById('show-multiplayer-button');
                 this.setupKeyboardControls();
                 this.setupTouchControls();
 
-                // Event listeners
-                this.introScreen.addEventListener('mousedown', this.startGame.bind(this)); //
+                // Bind 'this' context to event listner callbacks
+                this.startGame = this.startGame.bind(this);
+
+                this.introScreen.addEventListener('mousedown', this.startGame); //
 Modify this line
-                this.introScreen.addEventListener('touchstart', this.startGame.bind(this)); //
+                this.introScreen.addEventListener('touchstart', this.startGame); //
 Modify this line
                 this.showLeaderboardButton.addEventListener('click',
 this.toggleLeaderboard.bind(this));
@@ -399,6 +402,7 @@ this.showMultiplayerPanel.bind(this));
 this.closeMultiplayerPanel.bind(this));
                 this.addBasePlayer(this.playerName);
 
+                console.log("Event listeners attached to introScreen and others.");
                 // Start the game loop
                 this.lastTime = 0;
                 this.init(); // call it first since init needs enemy array to be initialized
@@ -867,31 +871,34 @@ this.canvas.height / 2);
             }
 
             /*Input and Loop Methods ************************************************************************************* */
-             startGame() {
-                if (this.inIntro) {
-                    this.inIntro = false;
-                    this.introScreen.style.display = 'none';
-                       // Pause intro video
-                       this.introVideo.pause();
-                    this.canvas.style.display = 'block';
-                    document.getElementById('joystick').style.display = 'flex';
-                    document.getElementById('fire-button').style.display = 'flex';
-                    document.getElementById('pause-button').style.display = 'flex';
-                    document.getElementById('show-leaderboard-button').style.display = 'flex';
-                    document.getElementById('show-multiplayer-button').style.display = 'flex';
+               startGame() {
+                  console.log("startGame function called");
 
-                    this.gameActive = true;
-                    this.lastTime = performance.now(); // Reset lastTime
-                    requestAnimationFrame(this.gameLoop.bind(this));
-                         this.bgMusic.currentTime = 0; // Reset bgMusic
-                        this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-                } else  if (this.waitForRestart) {
-                     this.bgMusic.currentTime = 0;
-                    this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
-                    requestAnimationFrame(this.gameLoop.bind(this));
+                  if (this.inIntro) {
+                      this.inIntro = false;
+                      this.introScreen.style.display = 'none';
+                             // Pause intro video
+                             this.introVideo.pause();
+                      this.canvas.style.display = 'block';
+                      document.getElementById('joystick').style.display = 'flex';
+                      document.getElementById('fire-button').style.display = 'flex';
+                      document.getElementById('pause-button').style.display = 'flex';
+                      document.getElementById('show-leaderboard-button').style.display = 'flex';
+                      document.getElementById('show-multiplayer-button').style.display = 'flex';
 
-                 }
-            }
+                      this.gameActive = true;
+                      this.lastTime = performance.now(); // Reset lastTime
+
+                      requestAnimationFrame(this.gameLoop.bind(this));
+                           this.bgMusic.currentTime = 0; // Reset bgMusic
+                          this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+                  } else  if (this.waitForRestart) {
+                       this.bgMusic.currentTime = 0;
+                      this.bgMusic.play().catch(e => console.log("播放音效失败:", e));
+                      requestAnimationFrame(this.gameLoop.bind(this));
+
+                   }
+              }
 
             introLoop(timestamp) {
                 if (!this.inIntro) return;
